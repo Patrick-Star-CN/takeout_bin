@@ -1,13 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>test</title>
+	<script src="/src/js/vue.js"></script>
+	<script src="/src/js/element-ui.js"></script>
+	<script src="/src/js/axios.js"></script>
+	<link rel="stylesheet" href="/src/css/element-ui.css">
+</head>
+
+<body>
+	<el-header>
+		<h1>梦溪外卖柜终端面板</h1>
+	</el-header>
+	<el-main id="app">
+		<el-button @click="turn(0)">用户</el-button>
+		<el-button @click="turn(1)">外卖员</el-button>
+		<el-button @click="turn(2)">管理员</el-button>
+		<el-dialog :visible.sync="visible1" :title="member">
+			<el-image src="/src/img/login_code.png" fit="fill"></el-image>
+			<div class="dialog-footer">
+				<el-button type="primary" @click="login()">登录</el-button>
+			</div>
+		</el-dialog>
+
+		<el-dialog :visible.sync="visible2" :title="member">
+			<el-form>
+				<el-form-item label="账号">
+					<el-input v-model="manager_account"></el-input>
+				</el-form-item>
+				<el-form-item label="密码">
+					<el-input v-model="manager_passwd"></el-input>
+				</el-form-item>
+			</el-form>
+			<div class="dialog-footer">
+				<el-button type="primary" @click="login()">登录</el-button>
+			</div>
+		</el-dialog>
+	</el-main>
+	<el-footer></el-footer>
+</body>
+
+<script>
+	let arr = [
+		{name: '用户', url: '/user'},
+		{name: '外卖员', url: '/delivery'},
+		{name: '管理员', url: '/manager'}
+	];
+	let backend_server = 'http://127.0.0.1:5500';
+	let vm = new Vue({
+		el: '#app',
+		data: {
+			member_status: 0,
+			visible1: false,
+			visible2: false,
+			member: undefined,
+			manager_account: undefined,
+			manager_passwd: undefined,
+		},
+		/* mounted() {
+			 axios
+				.post(backend_server)
+				.then(response => (this.info = response))
+				.catch(function (error) {
+					console.log(error);
+				});
+		}, */
+		methods: {
+			turn(n) {
+				this.member = arr[n].name + " 登录";
+				this.member_status = n;
+				if (n != 2) {
+					this.visible1 = !this.visible1;
+				}
+				else {
+					this.visible2 = !this.visible2;
+				}
+			},
+			login() {
+				axios.post('/login', {
+					name: 'j10c'
+				})
+				.then(function (response) {
+					console.log(response);
+				})
+				.catch(function (error) {
+					console.log(error);
+				})
+				location.replace(arr[this.member_status].url);
+			}
+		}
+	});
+</script>
+
+<style>
+	.el-input {
+		width: 80%;
+	}
+	.el-dialog {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 400px;
+	}
+	.dialog-footer {
+		display: flex;
+		justify-content: center;
+	}
+</style>
+
 </html>
