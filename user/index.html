@@ -1,16 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>user</title>
-	<script src="./src/js/vue.js"></script>
+	<script src="/src/js/vue.js"></script>
+	<script src="/src/js/element-ui.js"></script>
+	<script src="/src/js/axios.js"></script>
+	<link rel="stylesheet" href="/src/css/element-ui.css">
 </head>
 
 <body>
-	<div id ="app">
+	<div id="app">
+		<el-container>
+			<el-aside width="200px">Aside</el-aside>
+			<el-container>
+				<el-header>Header</el-header>
+				<el-main>Main</el-main>
+				<el-footer>Footer</el-footer>
+			</el-container>
 
+		</el-container>
 	</div>
 
 </body>
@@ -23,4 +35,26 @@
 		methods: {}
 	});
 </script>
+<style>
+	  .el-header, .el-footer {
+    background-color: #B3C0D1;
+    color: #333;
+    text-align: center;
+    line-height: 60px;
+  }
+  
+  .el-aside {
+    background-color: #D3DCE6;
+    color: #333;
+    text-align: center;
+    line-height: 200px;
+  }
+  
+  .el-main {
+    background-color: #E9EEF3;
+    color: #333;
+    text-align: center;
+    line-height: 160px;
+  }
+</style>
 </html>

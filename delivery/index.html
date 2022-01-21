@@ -1,16 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>delivery</title>
-	<script src="./src/js/vue.js"></script>
+	<script src="/src/js/vue.js"></script>
+	<script src="/src/js/element-ui.js"></script>
+	<script src="/src/js/axios.js"></script>
+	<link rel="stylesheet" href="/src/css/element-ui.css">
 </head>
 
 <body>
-	<div id ="app">
+	<div id="app">
+		<el-container>
+			<el-header style="text-align: right;">
+				<h2>外卖员操作中心</h2>
 
+				<div style="width: 120px; display: flex; justify-content: space-between;">
+					<el-avatar>{{user.name}}</el-avatar>
+					<el-button type="danger" plain>登出</el-button>
+
+				</div>
+			</el-header>
+			<el-container>
+				<el-aside width="200px">
+					<el-menu default-active="1">
+						<el-menu-item index="1">
+							<template slot="title">存放外卖</template>
+						</el-menu-item>
+						<el-menu-item index="2">
+							<template slot="title">个人信息</template>
+						</el-menu-item>
+					</el-menu>
+				</el-aside>
+				<el-container>
+					<el-main>
+						<!-- <el-breadcrumb separator-class="el-icon-arrow-right">
+							<el-breadcrumb-item><a @click="switch_page(0)">外卖柜子总览</a></el-breadcrumb-item>
+							<el-breadcrumb-item><a>输入外卖信息</a></el-breadcrumb-item>
+						</el-breadcrumb> -->
+						<el-page-header @back="switch_page" :content="step ? '输入存餐码': '选择一个空柜存放'"></el-page-header>
+						<div id="cabinet" v-show="step===0">
+							<div v-for="box in boxs" class="takeout-box" @click="select">{{box.num}}</div>
+						</div>
+						<div id="input-info" v-show="step===1">
+							<el-card class="box-card">
+								<div slot="header" class="clearfix">
+									<span>第 {{ cur_num }} 号柜</span>
+									<el-button style="float: right; padding: 3px 0" type="text" @click="clear">清空输入</el-button>
+								</div>
+								<el-form ref="form" :model="form" label-width="80px">
+									<el-form-item label="存餐码">
+										<el-input v-model="form.name"></el-input>
+									</el-form-item>
+								</el-form>
+							</el-card>
+						</div>
+					</el-main>
+					<el-footer style="background-color: white;">备案信息</el-footer>
+				</el-container>
+			</el-container>
+		</el-container>
 	</div>
 
 </body>
@@ -19,8 +71,137 @@
 	//创建Vue实例,得到 ViewModel
 	var vm = new Vue({
 		el: '#app',
-		data: {},
-		methods: {}
+		data: {
+			user: {
+				name: 'j10c'
+			},
+			boxs: [],
+			clientHeight: '',
+			step: 0,
+			cur_num: 0,
+			form: {
+				code: ''
+			}
+		},
+		created() {
+			for (let i = 1; i <= 30; i++) {
+				this.boxs.push({ num: i, status: 0 });
+			}
+		},
+		mounted() {
+			// 固定 footer 在页面底部
+			this.clientHeight = document.documentElement.clientHeight;
+			document.querySelector(".el-main").style.height = (this.clientHeight - 120) + 'px';
+			window.onresize = function temp() {
+				this.clientHeight = document.documentElement.clientHeight;
+				this.clientHeight = (this.clientHeight - 120) + 'px';
+				console.log(this.clientHeight);
+				document.querySelector(".el-main").style.height = clientHeight;
+			};
+		},
+		methods: {
+			switch_page(f) {
+				if (this.step) this.step = 1 - this.step;
+			},
+			select(e) {
+				let element = e.target;
+				console.log(element);
+				this.cur_num = element.innerHTML;
+				//element.classList.add('selected'); // 测试多选，以后在管理员页面使用
+				this.step = 1 - this.step;
+			}
+		}
 	});
 </script>
+<style>
+	html {
+		font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+	}
+
+	body {
+		margin: 0;
+		overflow: hidden;
+	}
+
+	.el-header,
+	.el-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background-color: #b3d8ff;
+		color: #333;
+		text-align: center;
+		line-height: 60px;
+	}
+
+	.el-aside {
+		color: #333;
+		text-align: center;
+		line-height: 200px;
+	}
+
+	.el-main {
+		color: #333;
+		text-align: center;
+	}
+
+	.el-icon-arrow-right {
+		color: black
+	}
+
+	#cabinet {
+		display: flex;
+		flex-wrap: wrap;
+		margin: 30px;
+	}
+
+	.takeout-box {
+		width: 15%;
+		height: 100px;
+		border: 1px solid black;
+	}
+
+	.el-main {
+		overflow: auto;
+	}
+
+	.takeout-box {
+		line-height: normal;
+	}
+
+	.takeout-box:hover {
+		box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	}
+
+	.selected {
+		box-shadow: inset 1px 1px 10px 2px #409EFF;
+	}
+
+	.el-card {
+		margin: 30px;
+	}
+
+	.text {
+		font-size: 14px;
+	}
+
+	.item {
+		margin-bottom: 18px;
+	}
+
+	.clearfix:before,
+	.clearfix:after {
+		display: table;
+		content: "";
+	}
+
+	.clearfix:after {
+		clear: both
+	}
+
+	.box-card {
+		width: 50%;
+	}
+</style>
+
 </html>

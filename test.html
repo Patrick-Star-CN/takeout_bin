@@ -1,28 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <!-- import CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>test</title>
+	<script src="./src/js/vue.js"></script>
+	<script src="/src/js/element-ui.js"></script>
+	<script src="/src/js/axios.js"></script>
+	<link rel="stylesheet" href="/src/css/element-ui.css">
 </head>
+
 <body>
-  <div id="app">
-    <el-button @click="visible = true">Button</el-button>
-    <el-dialog :visible.sync="visible" title="Hello world">
-      <p>Try Element</p>
-    </el-dialog>
-  </div>
+	<div id ="app">
+		<el-form>
+			<el-form-item label="存餐码">
+				<el-input v-model="form.name"></el-input>
+			</el-form-item>
+			<el-form-item>
+				<el-button type="primary" @click="onSubmit">立即创建</el-button>
+				<el-button>取消</el-button>
+			</el-form-item>
+		</el-form>
+	</div>
+
 </body>
-  <!-- import Vue before Element -->
-  <script src="https://unpkg.com/vue/dist/vue.js"></script>
-  <!-- import JavaScript -->
-  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
-  <script>
-    new Vue({
-      el: '#app',
-      data: function() {
-        return { visible: false }
-      }
-    })
-  </script>
+
+<script>
+	//创建Vue实例,得到 ViewModel
+	var vm = new Vue({
+		el: '#app',
+		data: {
+			form: {
+				name: ''
+			}
+		},
+		methods: {}
+	});
+</script>
+<style>
+	h2.pos_left {
+		color: red;
+	}
+</style>
 </html>
