@@ -133,17 +133,20 @@ public class sqlconn {
         }
     }
 
-    public static boolean judge(String code) {
-        //传入取货码判断情况方法，传出true为该取货码只有一个对应的柜内外卖或有多个但都为同一个手机号名下的，传出false为该取货码有多个对应柜内外卖且不全都为同一个手机号名下的
+    public static int judge(String code) {
+        //传入取货码判断情况方法，传出1为该取货码只有一个对应的柜内外卖或有多个但都为同一个手机号名下的，传出2为该取货码有多个对应柜内外卖且不全都为同一个手机号名下的，传出0为出错或该取货码无对应外卖数据
         try {
             String sql = "select * from inbindata where code = ?";
-            PreparedStatement psql = conn.prepareStatement(sql);
+            PreparedStatement psql = conn.prepareStatement(sql;
             psql.setString(1, code);
             ResultSet re = psql.executeQuery();
+            if(!re.next()) {
+                return 0;
+            }
             if(re.isLast()) {
                 re.close();
                 psql.close();
-                return true;
+                return 1;
             }
             re.next();
             String phoneNum = re.getString("phoneNum");
@@ -152,15 +155,15 @@ public class sqlconn {
                 if(re.getString("phoneNum") != phoneNum) {
                     re.close();
                     psql.close();
-                    return false;
+                    return 2;
                 }
             }
             re.close();
             psql.close();
-            return true;
+            return 1;
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return 0;
         }
     }
 
