@@ -6,15 +6,13 @@ import java.util.List;
 
 /**
  * @Auther: Patrick_Star
- * @Date: 2022/1/21 - 01 - 21 - 0:39
+ * @Date: 2022/1/22 - 01 - 22 - 12:07
  * @Description: com.takeout.mysql
- * @version: 1.0
+ * @version: 1.5
  */
 public class sqlconn {
-    //属性
     static Connection conn;//数据库会话
 
-    //方法
     public static List<TakeoutDataHistory> fetchData(String consigneeName) {
         //查询某人的历史记录方法
         try {
@@ -22,19 +20,16 @@ public class sqlconn {
             PreparedStatement psql = conn.prepareStatement(sql);
             psql.setString(1, consigneeName);
             ResultSet re = psql.executeQuery();
-            int coordinate_X, coordinate_Y;
-            Timestamp date;
+            //将取出的数据存入history列表中
             List<TakeoutDataHistory> history = new ArrayList<TakeoutDataHistory>();
-            TakeoutDataHistory his = new TakeoutDataHistory();
+            TakeoutDataHistory history_ = new TakeoutDataHistory();
             while(re.next()) {
-                coordinate_X = re.getInt("coordinate_X");
-                coordinate_Y = re.getInt("coordinate_Y");
-                date = re.getTimestamp("date");
-                his.setCoordinate_X(coordinate_X);
-                his.setCoordinate_Y(coordinate_Y);
-                his.setConsigneeName(consigneeName);
-                his.setDate(date);
-                history.add(his);
+                history_.setPhoneNum(re.getString("phoneNum"));
+                history_.setCoordinate(re.getInt("coordinate"));
+                history_.setConsigneeName(consigneeName);
+                history_.setDate(re.getTimestamp("date"));
+                history_.setDate_out(re.getTimestamp("date_out"));
+                history.add(history_);
             }
             psql.close();
             re.close();
@@ -51,13 +46,14 @@ public class sqlconn {
     public static void insertDataToInbin(TakeoutDataInbin inbin) {
         //在柜内数据表中添加新的数据
         try {
-            PreparedStatement psql = conn.prepareStatement("insert into inbindata (coordinate_X, coordinate_Y, consigneeName, date)" + "values(?, ?, ?, ?)");  //用preparedStatement预处理来执行sql语句
-            psql.setInt(1, inbin.getCoordinate_X());
-            psql.setInt(2, inbin.getCoordinate_Y());
-            psql.setString(3, inbin.getConsigneeName());
+            PreparedStatement psql = conn.prepareStatement("insert into inbindata (code, phoneNum, coordinate, consigneeName, date)" + "values(?, ?, ?, ?, ?)");  //用preparedStatement预处理来执行sql语句
+            psql.setString(1, inbin.getCode());
+            psql.setString(2, inbin.getPhoneNum());
+            psql.setInt(3, inbin.getCoordinate());
+            psql.setString(4, inbin.getConsigneeName());
             java.util.Date utilDate = new java.util.Date();
             Timestamp date = new Timestamp(utilDate.getTime());
-            psql.setTimestamp(4, date);
+            psql.setTimestamp(5, date);
             psql.executeUpdate();
             psql.close();
         }catch(SQLException e){
@@ -73,22 +69,14 @@ public class sqlconn {
             Statement statement = conn.createStatement();
             String sql = "select * from inbindata";
             ResultSet re = statement.executeQuery(sql);
-            int coordinate_X, coordinate_Y, id;
-            Timestamp date;
-            String consigneeName;
             List<TakeoutDataInbin> inbin = new ArrayList<TakeoutDataInbin>();
             TakeoutDataInbin inbin_ = new TakeoutDataInbin();
             while(re.next()) {
-                coordinate_X = re.getInt("coordinate_X");
-                coordinate_Y = re.getInt("coordinate_Y");
-                date = re.getTimestamp("date");
-                consigneeName = re.getString("consigneeName");
-                id = re.getInt("id");
-                inbin_.setId(id);
-                inbin_.setCoordinate_X(coordinate_X);
-                inbin_.setCoordinate_Y(coordinate_Y);
-                inbin_.setConsigneeName(consigneeName);
-                inbin_.setDate(date);
+                inbin_.setId(re.getInt("id"));
+                inbin_.setPhoneNum(re.getString("phoneNum"));
+                inbin_.setCoordinate(re.getInt("coordinate"));
+                inbin_.setConsigneeName(re.getString("consigneeName"));
+                inbin_.setDate(re.getTimestamp("date"));
                 inbin.add(inbin_);
             }
             return inbin;
@@ -102,35 +90,38 @@ public class sqlconn {
     }
 
     public static void moveData(int id) {
+        //将目标id的外卖数据从inbindata数据表中取出并删除，正则存入history数据表中的方法
         try {
+            //取出
             String sql = "select * from inbindata where id = ?";
             PreparedStatement psql = conn.prepareStatement(sql);
             psql.setInt(1, id);
             ResultSet re = psql.executeQuery();
-            int coordinate_X, coordinate_Y;
-            Timestamp date;
-            String consigneeName;
+            Timestamp date, date_out;
+            java.util.Date utilDate_out;
             TakeoutDataHistory history = new TakeoutDataHistory();
             while(re.next()) {
-                coordinate_X = re.getInt("coordinate_X");
-                coordinate_Y = re.getInt("coordinate_Y");
-                consigneeName = re.getString("consigneeName");
+                utilDate_out = new java.util.Date();
+                date_out = new Timestamp(utilDate_out.getTime());
                 date = re.getTimestamp("date");
-                history.setCoordinate_X(coordinate_X);
-                history.setCoordinate_Y(coordinate_Y);
-                history.setConsigneeName(consigneeName);
+                history.setPhoneNum(re.getString("phoneNum"));
+                history.setCoordinate(re.getInt("coordinate"));
+                history.setConsigneeName(re.getString("consigneeName"));
                 history.setDate(date);
-                PreparedStatement psqlNew = conn.prepareStatement("insert into inbindata (coordinate_X, coordinate_Y, consigneeName, date)" + "values(?, ?, ?, ?)");
-                psqlNew.setInt(1, coordinate_X);
-                psqlNew.setInt(2, coordinate_Y);
-                psqlNew.setString(3, consigneeName);
-                psqlNew.setTimestamp(4, date);
+                //存入
+                var psqlNew = conn.prepareStatement("insert into history (phoneNum, coordinate, consigneeName, date, date_out)" + "values(?, ?, ?, ?, ?)");
+                psqlNew.setString(1, history.getPhoneNum());
+                psqlNew.setInt(2, history.getCoordinate());
+                psqlNew.setString(3, history.getConsigneeName());
+                psqlNew.setTimestamp(4, history.getDate());
+                psqlNew.setTimestamp(5, date_out);
                 psqlNew.executeUpdate();
                 psqlNew.close();
             }
             PreparedStatement psqlDel;
-            psqlDel = conn.prepareStatement("delete from inbindata where id = ");
-            psqlDel.setInt(1, id);
+            //删除
+            psqlDel = conn.prepareStatement("delete from inbindata where id = ?");
+            psqlDel.setFloat(1, id);
             psqlDel.executeUpdate();
             psqlDel.close();
             psql.close();
@@ -142,27 +133,98 @@ public class sqlconn {
         }
     }
 
+    public static boolean judge(String code) {
+        //传入取货码判断情况方法，传出true为该取货码只有一个对应的柜内外卖或有多个但都为同一个手机号名下的，传出false为该取货码有多个对应柜内外卖且不全都为同一个手机号名下的
+        try {
+            String sql = "select * from inbindata where code = ?";
+            PreparedStatement psql = conn.prepareStatement(sql);
+            psql.setString(1, code);
+            ResultSet re = psql.executeQuery();
+            re.last();
+            if(re.getRow() == 1) {
+                re.close();
+                psql.close();
+                return true;
+            }
+            re.beforeFirst();
+            String phoneNum = re.getString("phoneNum");
+            re.next();
+            while(re.next()) {
+                if(re.getString("phoneNum") != phoneNum) {
+                    re.close();
+                    psql.close();
+                    return false;
+                }
+            }
+            re.close();
+            psql.close();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static TakeoutDataInbin fetchDate(String code) {
+        //通过传入取货码来取出外卖
+        try {
+            String sql = "select * from inbindata where code = ?";
+            PreparedStatement psql = conn.prepareStatement(sql);
+            psql.setString(1, code);
+            ResultSet re = psql.executeQuery();
+            TakeoutDataInbin inbin = new TakeoutDataInbin();
+            inbin.setId(re.getInt("id"));
+            inbin.setCoordinate(re.getInt("coordinate"));
+            inbin.setConsigneeName(re.getString("consigneeName"));
+            inbin.setDate(re.getTimestamp("date"));
+            re.close();
+            psql.close();
+            return inbin;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static TakeoutDataInbin fetchDateByPhoneNum(String phoneNum) {
+        //通过传入取货码来取出外卖
+        try {
+            String sql = "select * from inbindata where phoneNum = ?";
+            PreparedStatement psql = conn.prepareStatement(sql);
+            psql.setString(1, phoneNum);
+            ResultSet re = psql.executeQuery();
+            TakeoutDataInbin inbin = new TakeoutDataInbin();
+            inbin.setId(re.getInt("id"));
+            inbin.setCoordinate(re.getInt("coordinate"));
+            inbin.setConsigneeName(re.getString("consigneeName"));
+            inbin.setDate(re.getTimestamp("date"));
+            re.close();
+            psql.close();
+            return inbin;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static void conn() {
         //数据库连接方法
-        String driver = "com.mysql.jdbc.Driver";
+        String driver = "com.mysql.cj.jdbc.Driver";
         String url = "jdbc:mysql://localhost:3306/takeout_bin";
         String user = "root";
         String password = "cxcxcx4,";
         try{
             Class.forName(driver);
             conn = DriverManager.getConnection(url, user, password);
-            if(!conn.isClosed()) {
-                System.out.println("Succeeded connection to the Database!");
-            }
         } catch (ClassNotFoundException e) {
-            System.out.println("Sorry, can't find the Driver!");
             e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void disconn() {
+    public static void disconn() {
+        //数据库结束连接方法
         try {
             conn.close();
         } catch (SQLException e) {
