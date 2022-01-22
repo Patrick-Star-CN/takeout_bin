@@ -53,11 +53,17 @@ public static void sqlconn.conn() //用于连接预设好的数据库
 
 public static void sqlconn.disconn() //用于断开与数据库的连接
 
-public static void sqlconn.insertDataToInbin(TakeoutDataInbin inbin) //传入存入的外卖的坐标、收货人id的结构体，自动生成存货时间，并存入inbindata数据表
+public static void sqlconn.insertDataToInbin(TakeoutDataInbin inbin) //传入存入的外卖的收货码、收货人手机号、坐标、收货人id的结构体，自动生成存货时间，并存入inbindata数据表
 
 public static List<TakeoutDataInbin> fetchData() //查询并传出柜中存着所有外卖数据，包括坐标、收货人id、存货时间
 
-public static List<TakeoutDataHistory> fetchData(String consigneeName) //传入所需用户id，传出他在history数据表中的历史外卖数据，包括坐标、存货时间
+public static List<TakeoutDataHistory> fetchData(String consigneeName) //传入所需用户id，传出他在history数据表中的历史外卖数据，包括收货人手机号、坐标、存货时间
 
 public static void moveData(int id) //传入所取外卖的数据id，将该条数据复制到history数据表中，并删除inbindata数据表中对应那条
+
+public static boolean judge(String code) //传入取货码，传出true为该取货码只有一个对应的柜内外卖或有多个但都为同一个手机号名下的，传出false为该取货码有多个对应柜内外卖且不全都为同一个手机号名下的
+
+public static TakeoutDataInbin fetchDate(String code) //传入取货码，传出id最小的外卖数据
+
+public static TakeoutDataInbin fetchDateByPhoneNum(String phoneNum) //传入手机号，传出id最小的外卖数据
 ```

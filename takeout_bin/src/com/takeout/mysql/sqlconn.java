@@ -140,13 +140,12 @@ public class sqlconn {
             PreparedStatement psql = conn.prepareStatement(sql);
             psql.setString(1, code);
             ResultSet re = psql.executeQuery();
-            re.last();
-            if(re.getRow() == 1) {
+            if(re.isLast()) {
                 re.close();
                 psql.close();
                 return true;
             }
-            re.beforeFirst();
+            re.next();
             String phoneNum = re.getString("phoneNum");
             re.next();
             while(re.next()) {
@@ -173,17 +172,25 @@ public class sqlconn {
             psql.setString(1, code);
             ResultSet re = psql.executeQuery();
             TakeoutDataInbin inbin = new TakeoutDataInbin();
-            inbin.setId(re.getInt("id"));
-            inbin.setCoordinate(re.getInt("coordinate"));
-            inbin.setConsigneeName(re.getString("consigneeName"));
-            inbin.setDate(re.getTimestamp("date"));
-            re.close();
-            psql.close();
-            return inbin;
+            re.next();
+            return getTakeoutDataInbin(psql, re, inbin);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private static TakeoutDataInbin getTakeoutDataInbin(PreparedStatement psql, ResultSet re, TakeoutDataInbin inbin) throws SQLException {
+        //从数据表中提取数据到内存
+        inbin.setId(re.getInt("id"));
+        inbin.setCoordinate(re.getInt("coordinate"));
+        inbin.setConsigneeName(re.getString("consigneeName"));
+        inbin.setDate(re.getTimestamp("date"));
+        inbin.setPhoneNum(re.getString("phoneNum"));
+        inbin.setCode(re.getString("code"));
+        re.close();
+        psql.close();
+        return inbin;
     }
 
     public static TakeoutDataInbin fetchDateByPhoneNum(String phoneNum) {
@@ -193,14 +200,9 @@ public class sqlconn {
             PreparedStatement psql = conn.prepareStatement(sql);
             psql.setString(1, phoneNum);
             ResultSet re = psql.executeQuery();
+            re.next();
             TakeoutDataInbin inbin = new TakeoutDataInbin();
-            inbin.setId(re.getInt("id"));
-            inbin.setCoordinate(re.getInt("coordinate"));
-            inbin.setConsigneeName(re.getString("consigneeName"));
-            inbin.setDate(re.getTimestamp("date"));
-            re.close();
-            psql.close();
-            return inbin;
+            return getTakeoutDataInbin(psql, re, inbin);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
