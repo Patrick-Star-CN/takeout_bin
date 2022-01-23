@@ -5,7 +5,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>delivery</title>
+	<title>外卖员操作中心</title>
 	<script src="/src/js/vue.js"></script>
 	<script src="/src/js/element-ui.js"></script>
 	<script src="/src/js/axios.js"></script>
@@ -42,22 +42,43 @@
 							<el-breadcrumb-item><a>输入外卖信息</a></el-breadcrumb-item>
 						</el-breadcrumb> -->
 						<el-page-header @back="switch_page" :content="step ? '输入存餐码': '选择一个空柜存放'"></el-page-header>
+						<!-- cabinet -->
 						<div id="cabinet" v-show="step===0">
-							<div v-for="box in boxs" class="takeout-box" @click="select">{{box.num}}</div>
+							<div v-for="box in boxs" class="takeout-box box" @click="select"
+								v-if="box.status!==undefined":style="{backgroundColor: color[box.status]}">{{box.num}}</div>
 						</div>
-						<div id="input-info" v-show="step===1">
+						<!-- input_takeout_info -->
+						<div id="input-info" v-if="step===1">
 							<el-card class="box-card">
+
 								<div slot="header" class="clearfix">
 									<span>第 {{ cur_num }} 号柜</span>
-									<el-button style="float: right; padding: 3px 0" type="text" @click="clear">清空输入</el-button>
+									<el-button style="float: right; padding: 3px 0" type="text" @click="form.code=''">清空输入</el-button>
 								</div>
+
 								<el-form ref="form" :model="form" label-width="80px">
 									<el-form-item label="存餐码">
-										<el-input v-model="form.name"></el-input>
+										<el-input v-model="form.code" style="float: left; width: 80%"></el-input>
 									</el-form-item>
 								</el-form>
+								<!-- keyboard -->
+								<div id="keyboard">
+									<div class="key box" @click="input_number">1</div>
+									<div class="key box" @click="input_number">2</div>
+									<div class="key box" @click="input_number">3</div>
+									<div class="key box" @click="input_number">4</div>
+									<div class="key box" @click="input_number">5</div>
+									<div class="key box" @click="input_number">6</div>
+									<div class="key box" @click="input_number">7</div>
+									<div class="key box" @click="input_number">8</div>
+									<div class="key box" @click="input_number">9</div>
+									<div class="key box" @click="input_number">删除</div>
+									<div class="key box" @click="input_number">0</div>
+									<div class="key box" @click="input_number">提交</div>
+								</div>
 							</el-card>
 						</div>
+
 					</el-main>
 					<el-footer style="background-color: white;">备案信息</el-footer>
 				</el-container>
@@ -72,20 +93,20 @@
 	var vm = new Vue({
 		el: '#app',
 		data: {
-			user: {
-				name: 'j10c'
-			},
-			boxs: [],
+			user: { name: 'j10c' },
+			color: ['#e1f3d8', '#e9e9eb'], // empty, used
+			boxs: [{num: undefined, status: undefined }],
 			clientHeight: '',
 			step: 0,
 			cur_num: 0,
-			form: {
-				code: ''
-			}
+			form: { code: '' }
 		},
 		created() {
 			for (let i = 1; i <= 30; i++) {
-				this.boxs.push({ num: i, status: 0 });
+				this.boxs.push({ num: i, status: 1 });
+			}
+			for (let i = 1; i <= 30; i++) {
+				if (i % 2 && i < 17) this.boxs[i].status = 0;
 			}
 		},
 		mounted() {
@@ -101,19 +122,36 @@
 		},
 		methods: {
 			switch_page(f) {
-				if (this.step) this.step = 1 - this.step;
+				if (this.step) this.step--; //返回选择页面
+				this.form.code = '';
 			},
 			select(e) {
 				let element = e.target;
-				console.log(element);
+				if (this.boxs[element.innerHTML].status) {
+					alert("柜子已经被占用！");
+					return;
+				}
 				this.cur_num = element.innerHTML;
 				//element.classList.add('selected'); // 测试多选，以后在管理员页面使用
-				this.step = 1 - this.step;
+				this.step++; // 进入下一步，输入存餐码
+			},
+			input_number(e) {
+				let text = e.target.innerHTML;
+				if (text >= '0' && text <= '9') this.form.code += e.target.innerHTML;
+				else if (text === "删除") this.form.code  = this.form.code.substring(0, this.form.code.length - 1)
+				else this.submit();
+			},
+			submit() {
+				alert(this.form.code);
 			}
 		}
 	});
 </script>
 <style>
+	* {
+		font-size: 20px !important;
+	}
+
 	html {
 		font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
 	}
@@ -121,6 +159,10 @@
 	body {
 		margin: 0;
 		overflow: hidden;
+	}
+
+	.el-button {
+		font-size: 20px !important;
 	}
 
 	.el-header,
@@ -155,21 +197,37 @@
 		margin: 30px;
 	}
 
+	#keyboard {
+		display: flex;
+		flex-wrap: wrap;
+		margin: 15px;
+	}
+
 	.takeout-box {
 		width: 15%;
 		height: 100px;
 		border: 1px solid black;
+		line-height: 100px;
+	}
+
+	.key {
+		width: calc(100% / 3 - 2px);
+		height: 80px;
+		border: 1px solid black;
+		line-height: 80px;
+		font-size: 30px;
+		user-select: none;
 	}
 
 	.el-main {
 		overflow: auto;
 	}
 
-	.takeout-box {
-		line-height: normal;
+	.box {
+		font-size: 30px !important;
 	}
 
-	.takeout-box:hover {
+	.box:hover {
 		box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 	}
 
@@ -179,10 +237,6 @@
 
 	.el-card {
 		margin: 30px;
-	}
-
-	.text {
-		font-size: 14px;
 	}
 
 	.item {
@@ -200,7 +254,7 @@
 	}
 
 	.box-card {
-		width: 50%;
+		width: 600px;
 	}
 </style>
 
