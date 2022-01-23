@@ -20,7 +20,7 @@
 
 				<div style="width: 120px; display: flex; justify-content: space-between;">
 					<el-avatar>{{user.name}}</el-avatar>
-					<el-button type="danger" plain>登出</el-button>
+					<el-button type="danger" plain @click="sign_out">登出</el-button>
 
 				</div>
 			</el-header>
@@ -80,7 +80,10 @@
 						</div>
 
 					</el-main>
-					<el-footer style="background-color: white;">备案信息</el-footer>
+					<el-footer style="background-color: white; justify-content: space-evenly;">
+						<span style="color: #67C23A">绿色为空柜子</span>
+						<span style="color: #909399">灰色为已占用</span>
+					</el-footer>
 				</el-container>
 			</el-container>
 		</el-container>
@@ -143,6 +146,10 @@
 			},
 			submit() {
 				alert(this.form.code);
+			},
+			sign_out() {
+				window.location.replace('/');
+				// 删除登录信息 TODO
 			}
 		}
 	});
@@ -185,10 +192,6 @@
 	.el-main {
 		color: #333;
 		text-align: center;
-	}
-
-	.el-icon-arrow-right {
-		color: black
 	}
 
 	#cabinet {
