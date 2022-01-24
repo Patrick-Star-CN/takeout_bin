@@ -13,15 +13,7 @@
 
 <body>
 	<div id ="app">
-		<el-form>
-			<el-form-item label="存餐码">
-				<el-input v-model="form.name"></el-input>
-			</el-form-item>
-			<el-form-item>
-				<el-button type="primary" @click="onSubmit">立即创建</el-button>
-				<el-button>取消</el-button>
-			</el-form-item>
-		</el-form>
+		<div v-if="check">{{a.substring(1,2)}}</div>
 	</div>
 
 </body>
@@ -31,6 +23,8 @@
 	var vm = new Vue({
 		el: '#app',
 		data: {
+			check: true,
+			a: undefined,
 			form: {
 				name: ''
 			}
