@@ -52,16 +52,23 @@
 								<el-descriptions title="柜子信息" :column="2" border>
 									<el-descriptions-item label="柜号">{{ cur_num }}</el-descriptions-item>
 									<el-descriptions-item label="状态">
-									<!-- 	<el-tag :type="boxStatus[boxs[cur_num].status]">{{ statusTitle[boxs[cur_num].status] }}</el-tag>
- -->									</el-descriptions-item>
+										<el-tag :type="boxStatusType">{{ boxStatusTitle }}</el-tag>
+									</el-descriptions-item>
 									<el-descriptions-item label="存餐码" v-if="boxLinks[cur_num] !== undefined">
 										<el-tag>{{ items[boxLinks[cur_num]].phoneNum.substring(7, 11) }}</el-tag>
 									</el-descriptions-item>
-									<el-descriptions-item label="用户手机号码" v-if="boxLinks[cur_num] !== undefined">{{ items[boxLinks[cur_num]].phoneNum }}</el-descriptions-item>
-									<el-descriptions-item label="存放时间" :span="2" v-if="boxLinks[cur_num] !== undefined">{{ getTime }}</el-descriptions-item>
-									<el-descriptions-item label="倒计时" v-if="boxLinks[cur_num] !== undefined">{{ items[boxLinks[cur_num]].storageTime }}</el-descriptions-item>
-									</el-description>
-
+									<el-descriptions-item label="用户手机号码" v-if="boxLinks[cur_num] !== undefined">{{
+										items[boxLinks[cur_num]].phoneNum }}</el-descriptions-item>
+									<el-descriptions-item label="存放时间" :span="2" v-if="boxLinks[cur_num] !== undefined">{{ getTime }}
+									</el-descriptions-item>
+									<!-- <el-descriptions-item label="倒计时"
+										v-if="boxLinks[cur_num] !== undefined && !items[boxLinks[cur_num]].status">{{ count }}
+									</el-descriptions-item> -->
+								</el-descriptions>
+								<el-divider content-position="left">所有操作</el-divider>
+								<el-button round>打开前柜门</el-button>
+								<el-button round>打开后柜门</el-button>
+								<el-button round :disabled="boxLinks[cur_num] === undefined">给该用户发送短信</el-button>
 							</el-card>
 						</div>
 
@@ -79,6 +86,8 @@
 </body>
 
 <script>
+	const statusTitle = ['空闲', '已使用', '已超时'];
+	const boxStatus = ['success', 'info', 'warning'];
 	//创建Vue实例,得到 ViewModel
 	const vm = new Vue({
 		el: '#app',
@@ -86,14 +95,13 @@
 			loaded: false,
 			user: { name: 'j10c' },
 			colorPad: ['#e1f3d8', '#e9e9eb', '#faecd8'], // empty, used, timeout
-			boxStatus: ['success', 'info', 'warning'],
-			statusTitle: ['空闲', '已使用', '已超时'],
 			boxLinks: [],
 			items: [{
 				id: undefined,
 				phobeNum: undefined,
 				location: undefined,
-				stotageTime: undefined
+				storageTime: undefined,
+				status: undefined
 			}],
 			clientHeight: '',
 			step: 0,
@@ -113,6 +121,15 @@
 				console.log(this.clientHeight);
 				document.querySelector(".el-main").style.height = clientHeight;
 			};
+			// 倒计时
+			setInterval(() => {
+				for (let i = 1; i < this.items.length; i++) {
+					if (this.items[i].status) break;
+					else {
+						this.items[i].status = (new Date().getTime() - Number(this.items[i].storageTime) < 12 * 3600000) ? 0 : 1;
+					}
+				}
+			}, 1000); // 刷新间隔
 		},
 		methods: {
 			async getTakeoutData() {
@@ -129,6 +146,7 @@
 					item.phoneNum = data[i].phoneNum;
 					item.location = data[i].location;
 					item.storageTime = data[i].storageTime;
+					item.status = (new Date().getTime() - Number(item.storageTime) < 12 * 3600000) ? 0 : 1;
 					this.items.push(item);
 				}
 				this.boxLinks.length = 30;
@@ -152,21 +170,31 @@
 			sign_out() {
 				window.location.replace('/');
 				// 删除登录信息 TODO
-			}
+			},
+
 		},
 		computed: {
 			boxColor() {
 				return function (n) {
 					if (this.boxLinks[n] === undefined) return this.colorPad[0];
+					else if (this.items[this.boxLinks[n]].status) return this.colorPad[2];
 					else return this.colorPad[1];
 				}
 			},
 			getTime() {
-				let time = new Date(String(this.items[this.boxLinks[this.cur_num]].storageTime));
-				console.log(String(this.items[this.boxLinks[this.cur_num]].storageTime));
+				let time = new Date(Number(this.items[this.boxLinks[this.cur_num]].storageTime));
 				let y = time.getFullYear(), m = time.getMonth() + 1, d = time.getDate();
 				return y + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) + " " + time.toTimeString().substr(0, 8);
-
+			},
+			boxStatusType() {
+				if (this.boxLinks[this.cur_num] === undefined) return boxStatus[0];
+				else if (this.items[this.boxLinks[this.cur_num]].status) return boxStatus[2];
+				else return boxStatus[1];
+			},
+			boxStatusTitle() {
+				if (this.boxLinks[this.cur_num] === undefined) return statusTitle[0];
+				else if (this.items[this.boxLinks[this.cur_num]].status) return statusTitle[2];
+				else return statusTitle[1];
 			}
 		}
 	});
@@ -260,6 +288,10 @@
 
 	.box-card {
 		width: 600px;
+	}
+
+	.el-divider__text {
+		color: #dcdfe6;
 	}
 </style>
 
