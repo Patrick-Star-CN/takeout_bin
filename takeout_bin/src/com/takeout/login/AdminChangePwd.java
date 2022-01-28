@@ -2,6 +2,13 @@ package com.takeout.login;
 
 import java.sql.*;
 
+/**
+ * @Auther: Qing-Qiu
+ * @Date: 2022/1/24 - 01 - 24 - 20:50
+ * @Description: 管理员密码修改
+ * @version: 1.0
+ */
+
 public class AdminChangePwd {
     public static void ChangePwd(Connection conn, String oldPwd, String newPwd) {
         try {

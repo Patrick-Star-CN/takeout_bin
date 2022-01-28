@@ -11,7 +11,7 @@ import java.util.Scanner;
  * @Auther: Patrick_Star
  * @Date: 2022/1/22 - 01 - 22 - 12:29
  * @Description: com.takeout.intergration
- * @version: 1.0
+ * @version: 2.1
  */
 public class Main {
     public static void main(String[] args) {

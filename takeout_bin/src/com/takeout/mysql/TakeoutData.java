@@ -6,7 +6,7 @@ import java.sql.Timestamp;
  * @Auther: Patrick_Star
  * @Date: 2022/1/22 - 01 - 22 - 12:07
  * @Description: com.takeout.mysql
- * @version: 1.0
+ * @version: 1.5
  */
 public class TakeoutData {
     private int coordinate;

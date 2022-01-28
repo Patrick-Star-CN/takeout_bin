@@ -1,17 +1,13 @@
 package com.takeout.login;
 
 /**
- * @Auther: Patrick_Star
+ * @Auther: codelover123hxy
  * @Date: 2022/1/24 - 01 - 24 - 20:07
  * @Description: com.takeout.login
  * @version: 1.0
  */
-import java.sql.*;
 
-/**
- * @Auther codelover123hxy
- * @Date: 2022/1/24
- */
+import java.sql.*;
 
 public class AdminLogin {
     public static void LoginToInbin(Connection conn, String getAdminName, String getPassword) {

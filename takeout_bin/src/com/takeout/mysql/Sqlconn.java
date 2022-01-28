@@ -8,7 +8,7 @@ import java.util.List;
  * @Auther: Patrick_Star
  * @Date: 2022/1/22 - 01 - 22 - 12:07
  * @Description: com.takeout.mysql
- * @version: 1.5
+ * @version: 2.0
  */
 public class Sqlconn {
 
