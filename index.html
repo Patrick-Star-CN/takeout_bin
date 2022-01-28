@@ -45,10 +45,12 @@
 </body>
 
 <script>
+	let url = 'http://localhost'
+	let port = '4399';
 	let arr = [
-		{name: '用户', url: '/user'},
-		{name: '外卖员', url: '/delivery'},
-		{name: '管理员', url: '/manager'}
+		{ name: '用户', url: '/user' },
+		{ name: '外卖员', url: '/delivery' },
+		{ name: '管理员', url: '/manager' }
 	];
 	let backend_server = 'http://127.0.0.1:5500';
 	let vm = new Vue({
@@ -81,16 +83,30 @@
 				}
 			},
 			login() {
-				axios.post('/login', {
-					name: 'j10c'
+				axios({
+					url: url + ':' + port + '/takeout_bin/adminlogin',
+					method: 'post',
+					data: {
+						name: this.manager_account,
+						password: this.manager_passwd
+					},
+					/* headers: {
+						'Content-type': 'application/x-www-form-urlencode'
+					} */
 				})
-				.then(function (response) {
-					console.log(response);
-				})
-				.catch(function (error) {
-					console.log(error);
-				})
-				location.replace(arr[this.member_status].url);
+					.then(function (response) {
+						let msg = response.data.message; 
+						if (msg === 'success') location.replace(arr[vm.member_status].url);
+						else {
+							this.manager_account = '';
+							this.manager_passwd = '';
+							if (msg === 'wrong password') alert("密码错误");
+							else alert("用户名错误");
+						}
+					})
+					.catch(function (error) {
+						console.log(error);
+					})
 			}
 		}
 	});
@@ -100,12 +116,14 @@
 	.el-input {
 		width: 80%;
 	}
+
 	.el-dialog {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		width: 400px;
 	}
+
 	.dialog-footer {
 		display: flex;
 		justify-content: center;
