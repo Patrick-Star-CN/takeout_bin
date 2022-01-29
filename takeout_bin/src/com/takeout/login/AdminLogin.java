@@ -1,16 +1,21 @@
 package com.takeout.login;
 
-/**
- * @Auther: codelover123hxy
- * @Date: 2022/1/24 - 01 - 24 - 20:07
- * @Description: com.takeout.login
- * @version: 1.0
- */
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import java.sql.*;
 
+/**
+ * @Auther: codelover123hxy
+ * @Date: 2022/1/24 - 01 - 24 - 20:07
+ * @Description: 管理员登录
+ * @version: 2.0
+ */
+
 public class AdminLogin {
-    public static void LoginToInbin(Connection conn, String getAdminName, String getPassword) {
+    public static String LoginToInbin(Connection conn, String getAdminName, String getPassword) {
+        String res = null;
         try {
             String sql = "select * from admin";
             PreparedStatement psql = conn.prepareStatement(sql);
@@ -19,20 +24,28 @@ public class AdminLogin {
             String adminName = re.getString("adminName");
             String password = re.getString("password");
             if (adminName.equals(getAdminName) != true) {
-                System.out.println("管理员用户名错误，请重新输入!");
+                res = "Wrong name";
             } else {
                 if (password.equals(getPassword) != true)
-                    System.out.println("管理员密码错误，请重新输入！");
+                    res = "Wrong password";
                 else {
-                    System.out.println("管理员登录成功");
+                    res = "success";
                 }
             }
             re.close();
             psql.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            res = "SQLError";
         } catch (Exception e) {
             e.printStackTrace();
+            res = "error";
+        } finally {
+            return res;
         }
+    }
+
+    public AdminLogin() {
+
     }
 }

@@ -1,6 +1,5 @@
 package com.takeout.mysql;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 
 /**

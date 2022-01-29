@@ -2,6 +2,7 @@ package com.takeout.intergration;
 
 import com.takeout.login.AdminLogin;
 import com.takeout.mysql.*;
+import net.sf.json.JSONObject;
 
 import java.sql.Connection;
 import java.util.List;
@@ -25,7 +26,6 @@ public class Main {
             inbin.setPhoneNum(phoneNum);
             inbin.setCode(phoneNum.substring(phoneNum.length() - 4));
             inbin.setCoordinate(sc.nextInt());
-            inbin.setConsigneeName(sc.next());
             ChangeData.insertDataToInbin(conn, inbin);
             Sqlconn.disconn(conn);
         } else if(typeNum == 2) {
@@ -47,9 +47,7 @@ public class Main {
             }
             Sqlconn.disconn(conn);
         } else if(typeNum == 4) {
-            Connection conn = Sqlconn.conn();
-            AdminLogin.LoginToInbin(conn, sc.next(), sc.next());
-            Sqlconn.disconn(conn);
+
         } else if(typeNum == 5) {
             Connection conn = Sqlconn.conn();
             String code = sc.next();

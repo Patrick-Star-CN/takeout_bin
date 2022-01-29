@@ -35,4 +35,8 @@ public class AdminChangePwd {
             e.printStackTrace();
         }
     }
+
+    public AdminChangePwd() {
+
+    }
 }

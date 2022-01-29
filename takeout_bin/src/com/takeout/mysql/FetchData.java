@@ -11,20 +11,19 @@ import java.util.List;
  * @version: 1.0
  */
 public class FetchData {
-    public static List<TakeoutDataHistory> fetchData(Connection conn, String consigneeName) {
+    public static List<TakeoutDataHistory> fetchData(Connection conn, String phoneNum) {
         //查询某人的历史记录方法
         try {
-            String sql = "select * from history where consigneeName = ?";
+            String sql = "select * from history where phoneNum = ?";
             PreparedStatement psql = conn.prepareStatement(sql);
-            psql.setString(1, consigneeName);
+            psql.setString(1, phoneNum);
             ResultSet re = psql.executeQuery();
             //将取出的数据存入history列表中
             List<TakeoutDataHistory> history = new ArrayList<TakeoutDataHistory>();
-            TakeoutDataHistory history_ = new TakeoutDataHistory();
             while(re.next()) {
-                history_.setPhoneNum(re.getString("phoneNum"));
+                TakeoutDataHistory history_ = new TakeoutDataHistory();
+                history_.setPhoneNum(phoneNum);
                 history_.setCoordinate(re.getInt("coordinate"));
-                history_.setConsigneeName(consigneeName);
                 history_.setDate(re.getTimestamp("date"));
                 history_.setDate_out(re.getTimestamp("date_out"));
                 history.add(history_);
@@ -48,12 +47,11 @@ public class FetchData {
             String sql = "select * from inbindata";
             ResultSet re = statement.executeQuery(sql);
             List<TakeoutDataInbin> inbin = new ArrayList<TakeoutDataInbin>();
-            TakeoutDataInbin inbin_ = new TakeoutDataInbin();
             while(re.next()) {
+                TakeoutDataInbin inbin_ = new TakeoutDataInbin();
                 inbin_.setId(re.getInt("id"));
                 inbin_.setPhoneNum(re.getString("phoneNum"));
                 inbin_.setCoordinate(re.getInt("coordinate"));
-                inbin_.setConsigneeName(re.getString("consigneeName"));
                 inbin_.setDate(re.getTimestamp("date"));
                 inbin.add(inbin_);
             }
@@ -137,12 +135,15 @@ public class FetchData {
         //从数据表中提取数据到内存
         inbin.setId(re.getInt("id"));
         inbin.setCoordinate(re.getInt("coordinate"));
-        inbin.setConsigneeName(re.getString("consigneeName"));
         inbin.setDate(re.getTimestamp("date"));
         inbin.setPhoneNum(re.getString("phoneNum"));
         inbin.setCode(re.getString("code"));
         re.close();
         psql.close();
         return inbin;
+    }
+
+    public FetchData() {
+
     }
 }

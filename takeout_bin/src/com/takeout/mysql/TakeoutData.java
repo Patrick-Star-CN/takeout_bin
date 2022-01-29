@@ -11,13 +11,10 @@ import java.sql.Timestamp;
 public class TakeoutData {
     private int coordinate;
     private Timestamp date;
-    private String consigneeName, phoneNum;
+    private String phoneNum;
 
     public int getCoordinate() {
         return coordinate;
-    }
-    public String getConsigneeName() {
-        return consigneeName;
     }
     public Timestamp getDate() {
         return date;
@@ -30,9 +27,6 @@ public class TakeoutData {
     }
     public void setDate(Timestamp date) {
         this.date = date;
-    }
-    public void setConsigneeName(String consigneeName) {
-        this.consigneeName = consigneeName;
     }
     public void setPhoneNum(String phoneNum) {
         this.phoneNum = phoneNum;

@@ -1,8 +1,6 @@
 package com.takeout.mysql;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @Auther: Patrick_Star
@@ -38,5 +36,9 @@ public class Sqlconn {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public Sqlconn() {
+
     }
 }

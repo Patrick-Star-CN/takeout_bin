@@ -11,4 +11,13 @@
         <servlet-name>adminLogin</servlet-name>
         <url-pattern>/adminlogin</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>FetchDataServletByAdmin</servlet-name>
+        <servlet-class>com.takeout.intergration.FetchDataServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FetchDataServletByAdmin</servlet-name>
+        <url-pattern>/fetchdata</url-pattern>
+    </servlet-mapping>
 </web-app>
