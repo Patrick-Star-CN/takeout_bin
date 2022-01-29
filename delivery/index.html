@@ -92,8 +92,10 @@
 </body>
 
 <script>
+	const url = 'http://localhost';
+	const port = '8080';
 	//创建Vue实例,得到 ViewModel
-	var vm = new Vue({
+	const vm = new Vue({
 		el: '#app',
 		data: {
 			user: { name: 'j10c' },
@@ -153,15 +155,13 @@
 			async getTakeoutData() {
 				let res = await axios({
 					method: 'get',
-					url: 'http://localhost:4399/getTakeoutData'
+					url: url + ':' + port + '/takeout_bin/fetchdata'
 				});
 				this.load = true;
 				let data = res.data;
 				for (let i = 0; i < data.length; i++) {
 					this.boxs[data[i].location].status = 1;
 				}
-
-
 			}
 		}
 	});

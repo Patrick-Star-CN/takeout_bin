@@ -86,6 +86,8 @@
 </body>
 
 <script>
+	const url = 'http://localhost';
+	const port = '8080';
 	const statusTitle = ['空闲', '已使用', '已超时'];
 	const boxStatus = ['success', 'info', 'warning'];
 	//创建Vue实例,得到 ViewModel
@@ -135,7 +137,7 @@
 			async getTakeoutData() {
 				let res = await axios({
 					method: 'get',
-					url: 'http://localhost:4399/getTakeoutData'
+					url: url + ':' + port + '/takeout_bin/fetchdata'
 				})
 				this.loaded = true; // 加载完毕
 				let data = res.data;
@@ -144,8 +146,8 @@
 					let item = new Object();
 					item.id = data[i].id;
 					item.phoneNum = data[i].phoneNum;
+					item.storageTime = data[i].date;
 					item.location = data[i].location;
-					item.storageTime = data[i].storageTime;
 					item.status = (new Date().getTime() - Number(item.storageTime) < 12 * 3600000) ? 0 : 1;
 					this.items.push(item);
 				}
