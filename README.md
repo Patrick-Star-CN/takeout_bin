@@ -1,69 +1,111 @@
-# takeout_bin
+# summary
 
-# 一些简单概述
+This is a project of takeout_bin, which is created by Team Cattle&Horse, for the Winter Vacation Software Design Competition of School of computer scinece and software, ZJUT.
 
-这是牛牛马马团队在大一上寒假计院软件设计大赛中的参赛作品。
+front-end: HTML + CSS + JavaScript
 
-制作的是一款外卖柜操作软件，可以给予用户、外卖员、管理员一些操控外卖柜的功能。
+back-end: Java
 
-语言：java（后端） + 
+# MySQL Database Disign Convention
 
-# mysql数据库设计约定
+database name: takeout_bin
 
-库名：takeout_bin
+## the first data table: inbindata
 
-## 数据表一
-
-表名：inbindata
-
-|  字段名  |  字段类型  |  字段长度  |  备注  |
+|  field name  |  field type  |  field lenth  |  remarks  |
 |  ----  |  ----  |  ----  |  ----  |
 |  id  |  int unsigned  |  255  |  NOT NULL, KEY, AUTO_INCREMENT  |
 |  code  |  varchar  |  4  |  NOT NULL  |
 |  phoneNum  |  varchar  |  255  |  NOT NULL  |
 |  coordinate  |  int unsigned  |  255  |  NOT NULL  |
-|  consigneeName  |  varchar  |  255  |  NOT NULL  |
 |  date  |  timestamp  |  6  |  NOT NULL  |
 
-## 数据表二
+## the second data table: history
 
-表名：history
-
-|  字段名  |  字段类型  |  字段长度  |  备注  |
+|  field name  |  field type  |  field lenth  |  remarks  |
 |  ----  |  ----  |  ----  |  ----  |
-|  phoneNum  |  varchar  |  255  |  NOT NULL  |
+|  phoneNum  |  varchar  |  255  |  NOT NULL, KEY1  |
 |  coordinate  |  int unsigned  |  255  |  NOT NULL  |
-|  consigneeName  |  varchar  |  255  |  NOT NULL, KEY1  |
 |  date  |  timestamp  |  6  |  NOT NULL, KEY2  |
-|  date_out  |  timestamp  |  6  |  NOT NULL, KEY2  |
+|  date_out  |  timestamp  |  6  |  NOT NULL  |
 
-## 数据表三
+## the third data table: admin
 
-表名：admin
-
-|  字段名  |  字段类型  |  字段长度  |  备注  |
+|  field name  |  field type  |  field lenth  |  remarks  |
 |  ----  |  ----  |  ----  |  ----  |
 |  adminName  |  varchar  |  255  |  NOT NULL  |
 |  password  |  varchar  |  255  |  NOT NULL  |
 
-# mysql方法接口
+# MySQL Method
 
 ``` java
-public static void sqlconn.conn() //用于连接预设好的数据库
+package com.takeout.mysql;
 
-public static void sqlconn.disconn() //用于断开与数据库的连接
+public static void Sqlconn.conn() //connect to the database whose parameters have been fixed
+/*returns:
+    conn - the Connection to database*/
 
-public static void sqlconn.insertDataToInbin(TakeoutDataInbin inbin) //传入存入的外卖的收货码、收货人手机号、坐标、收货人id的结构体，自动生成存货时间，并存入inbindata数据表
+public static void Sqlconn.disconn(connection conn) //break the connection to database
+/* Parameters: 
+    conn - the connection to database */
 
-public static List<TakeoutDataInbin> fetchData() //查询并传出柜中存着所有外卖数据，包括坐标、收货人id、存货时间
+public static void ChangeData.insertDataToInbin(Connection conn, TakeoutDataInbin inbin) //add data to Table inbindata
+/*Parameters:
+    conn - the connection to database
+    inbin - the data structure of takeout, include phoneNum, code, coordinate, date */
 
-public static List<TakeoutDataHistory> fetchData(String consigneeName) //传入所需用户id，传出他在history数据表中的历史外卖数据，包括收货人手机号、坐标、存货时间
+public static void ChangeData.moveData(Connection conn, int id) //move the data from inbindata to history when the takeout has been taken out
+/*Parameters:
+    conn - the connection to database
+    id - the id number of takeout which has been taken out */
 
-public static void moveData(int id) //传入所取外卖的数据id，将该条数据复制到history数据表中，并删除inbindata数据表中对应那条
+public static List<TakeoutDataHistory> FetchData.fetchData(Connection conn, String phoneNum) //fetch the datas of user in Table history by user's phone number
+/*Parameters:
+    conn - the connection to database
+    phoneNum - the phone number of user
+returns:
+    a list of this user's takeoutdata in Table history */
 
-public static boolean judge(String code) //传入取货码，传出true为该取货码只有一个对应的柜内外卖或有多个但都为同一个手机号名下的，传出false为该取货码有多个对应柜内外卖且不全都为同一个手机号名下的
+public static List<TakeoutDataInbin> FetchData.fetchData(Connection conn) //fetch the all datas in Table inbindata
+/*Parameters:
+    conn - the connection to database
+returns:
+    a list of takeoutdata in Table inbindata */
 
-public static TakeoutDataInbin fetchDate(String code) //传入取货码，传出id最小的外卖数据
+public static int FetchData.judge(Connection conn, String code) //judge the status of this code
+/*Parameters:
+    conn - the connection to database
+returns:
+    a type number: 
+        1 means the code has only one takeout or has more takeout but they belong to the same phone number
+        2 means the code has 2 or more takeout and they don't belong to the same phone number
+        0 means the code has no takeout or error */
 
-public static TakeoutDataInbin fetchDateByPhoneNum(String phoneNum) //传入手机号，传出id最小的外卖数据
+public static TakeoutDataInbin FetchData.fetchDate(Connection conn, String code) //fetch the top takeout data of the code
+/*Parameters:
+    conn - the connection to database
+    code - the last 4 of consignee's phone number
+returns:
+    the data of the consignee's top takeout data in inbindata */
+
+public static TakeoutDataInbin FetchData.fetchDateByPhoneNum(Connection conn, String phoneNum)  //fetch the top takeout data of the phone number
+/*Parameters:
+    conn - the connection to database
+    phoneNum - the consignee's phone number
+returns:
+    the data of the consignee's top takeout data in inbindata */
+```
+
+# adminLogin Method
+
+``` java
+package com.takeout.login;
+
+public static String AdminLogin.LoginToInbin(Connection conn, String getAdminName, String getPassword) //admin login
+/*Parameters:
+    conn - the connection to database
+    getAdminName - the name of admin
+    getPassword - the password of admin
+returns:
+    a message of login state */
 ```
