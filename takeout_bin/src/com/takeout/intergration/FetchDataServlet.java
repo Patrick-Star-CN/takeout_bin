@@ -3,7 +3,6 @@ package com.takeout.intergration;
 import com.takeout.mysql.FetchData;
 import com.takeout.mysql.Sqlconn;
 import com.takeout.mysql.TakeoutDataInbin;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,7 +12,6 @@ import net.sf.json.JSONObject;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -23,17 +21,17 @@ import java.util.List;
  * @version: 1.0
  */
 public class FetchDataServlet extends HttpServlet {
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         //设置编码类型
-        response.setContentType("application/json;charset=utf-8");
+        resp.setContentType("application/json;charset=utf-8");
         //设置响应头运行ajax跨域访问
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Methods", "GET,POST");
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods", "GET,POST");
 
         JSONObject jsonOut = new JSONObject();
         JSONArray data = new JSONArray();
         JSONObject data_ = new JSONObject();
-        ServletOutputStream out = response.getOutputStream();
+        ServletOutputStream out = resp.getOutputStream();
 
         Connection conn = Sqlconn.conn();
         List<TakeoutDataInbin> takeoutDataInbinList = FetchData.fetchData(conn);
@@ -43,7 +41,7 @@ public class FetchDataServlet extends HttpServlet {
             data_.put("id", Integer.toString(takeoutDataInbinList.get(i).getId()));
             data_.put("phoneNum", takeoutDataInbinList.get(i).getPhoneNum());
             data_.put("date", Long.toString(takeoutDataInbinList.get(i).getDate().getTime()));
-            data_.put("location", takeoutDataInbinList.get(i).getCoordinate());
+            data_.put("location", Integer.toString(takeoutDataInbinList.get(i).getCoordinate()));
             data.add(data_);
             data_.clear();
         }
@@ -52,8 +50,8 @@ public class FetchDataServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doGet(request, response);
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        doGet(req, resp);
     }
 
     public FetchDataServlet() {

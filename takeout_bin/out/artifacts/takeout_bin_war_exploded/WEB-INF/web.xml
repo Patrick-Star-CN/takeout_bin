@@ -13,11 +13,38 @@
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>FetchDataServletByAdmin</servlet-name>
+        <servlet-name>FetchDataServlet</servlet-name>
         <servlet-class>com.takeout.intergration.FetchDataServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>FetchDataServletByAdmin</servlet-name>
+        <servlet-name>FetchDataServlet</servlet-name>
         <url-pattern>/fetchdata</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AddData</servlet-name>
+        <servlet-class>com.takeout.intergration.AddDataServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AddData</servlet-name>
+        <url-pattern>/adddata</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>Judge</servlet-name>
+        <servlet-class>com.takeout.intergration.JudgeServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Judge</servlet-name>
+        <url-pattern>/judge</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>Move</servlet-name>
+        <servlet-class>com.takeout.intergration.MoveDataServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Move</servlet-name>
+        <url-pattern>/takeout</url-pattern>
     </servlet-mapping>
 </web-app>

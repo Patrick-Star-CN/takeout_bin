@@ -19,24 +19,9 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         int typeNum = sc.nextInt();
         if(typeNum == 1) {
-            String phoneNum;
-            Connection conn = Sqlconn.conn();
-            TakeoutDataInbin inbin = new TakeoutDataInbin();
-            phoneNum = sc.next();
-            inbin.setPhoneNum(phoneNum);
-            inbin.setCode(phoneNum.substring(phoneNum.length() - 4));
-            inbin.setCoordinate(sc.nextInt());
-            ChangeData.insertDataToInbin(conn, inbin);
-            Sqlconn.disconn(conn);
+
         } else if(typeNum == 2) {
-            Connection conn = Sqlconn.conn();
-            List<TakeoutDataInbin> inbin = FetchData.fetchData(conn);
-            if(inbin.size() != 0) {
-                System.out.println(inbin.get(0).getPhoneNum());
-            } else {
-                System.out.println("Sorry, this bin doesn't have any takeout!");
-            }
-            Sqlconn.disconn(conn);
+
         } else if(typeNum == 3) {
             Connection conn = Sqlconn.conn();
             List<TakeoutDataHistory> history = FetchData.fetchData(conn, sc.next());
@@ -49,26 +34,7 @@ public class Main {
         } else if(typeNum == 4) {
 
         } else if(typeNum == 5) {
-            Connection conn = Sqlconn.conn();
-            String code = sc.next();
-            if(FetchData.judge(conn, code) == 1) {
-                TakeoutDataInbin inbin = FetchData.fetchDate(conn, code);
-                System.out.println(inbin.getId() + " " + inbin.getPhoneNum());
-                ChangeData.moveData(conn, inbin.getId());
-            } else if(FetchData.judge(conn, code) == 2) {
-                System.out.println("Please scan your whole phone number...");
-                String phoneNum = sc.next();
-                TakeoutDataInbin inbin = FetchData.fetchDateByPhoneNum(conn, phoneNum);
-                if(inbin == null) {
-                    System.out.println("Sorry, you don't have any takeout in this bin!");
-                } else {
-                    System.out.println(inbin.getId() + " " + inbin.getPhoneNum());
-                    ChangeData.moveData(conn, inbin.getId());
-                }
-            } else {
-                System.out.println("Sorry, you don't have any takeout in this bin!");
-            }
-            Sqlconn.disconn(conn);
+
         }
     }
 }

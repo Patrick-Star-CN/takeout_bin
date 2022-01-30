@@ -9,7 +9,7 @@ import java.sql.*;
  * @version: 1.0
  */
 public class ChangeData {
-    public static void insertDataToInbin(Connection conn, TakeoutDataInbin inbin) {
+    public static String insertDataToInbin(Connection conn, TakeoutDataInbin inbin) {
         //在柜内数据表中添加新的数据
         try {
             PreparedStatement psql = conn.prepareStatement("insert into inbindata (code, phoneNum, coordinate, date)" + "values(?, ?, ?, ?)");  //用preparedStatement预处理来执行sql语句
@@ -21,16 +21,17 @@ public class ChangeData {
             psql.setTimestamp(4, date);
             psql.executeUpdate();
             psql.close();
+            return "success";
         }catch(SQLException e){
             e.printStackTrace();
+            return "error";
         }catch (Exception e) {
             e.printStackTrace();
+            return "error";
         }
     }
 
-
-
-    public static void moveData(Connection conn, int id) {
+    public static String moveData(Connection conn, int id) {
         //将目标id的外卖数据从inbindata数据表中取出并删除，正则存入history数据表中的方法
         try {
             //取出
@@ -65,10 +66,13 @@ public class ChangeData {
             psqlDel.close();
             psql.close();
             re.close();
+            return "success";
         } catch (SQLException e) {
             e.printStackTrace();
+            return "error";
         } catch (Exception e) {
             e.printStackTrace();
+            return "error";
         }
     }
 

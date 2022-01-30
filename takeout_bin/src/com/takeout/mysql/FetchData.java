@@ -82,9 +82,8 @@ public class FetchData {
             }
             re.next();
             String phoneNum = re.getString("phoneNum");
-            re.next();
             while(re.next()) {
-                if(re.getString("phoneNum") != phoneNum) {
+                if(!phoneNum.equals(re.getString("phoneNum"))) {
                     re.close();
                     psql.close();
                     return 2;
