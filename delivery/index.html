@@ -19,7 +19,7 @@
 				<h2>外卖员操作中心</h2>
 
 				<div style="width: 120px; display: flex; justify-content: space-between;">
-					<el-avatar>{{user.name}}</el-avatar>
+					<!-- <el-avatar>{{user.name}}</el-avatar> -->
 					<el-button type="danger" plain @click="sign_out">登出</el-button>
 
 				</div>
@@ -72,9 +72,9 @@
 									<div class="key box" @click="input_number">7</div>
 									<div class="key box" @click="input_number">8</div>
 									<div class="key box" @click="input_number">9</div>
-									<div class="key box" @click="input_number">删除</div>
+									<div class="key box" @click="backspace">删除</div>
 									<div class="key box" @click="input_number">0</div>
-									<div class="key box" @click="input_number">提交</div>
+									<div class="key box" @click="confirm">提交</div>
 								</div>
 							</el-card>
 						</div>
@@ -87,6 +87,17 @@
 				</el-container>
 			</el-container>
 		</el-container>
+		<el-dialog :visible.sync="confirmVisible" title="确认存放信息">
+			<el-descriptions title="外卖信息" direction="vertical" border>
+				<el-descriptions-item label="用户手机号码">{{ form.code }}</el-descriptions-item>
+					<el-descriptions-item label="存放柜子">第 {{ cur_num }} 号柜</el-descriptions-item>
+			</el-descriptions>
+			<el-divider></el-divider>
+			<div class="dialog-footer">
+				<el-button type="primary" @click="submit">确认并提交</el-button>
+				<el-button @click="confirmVisible=false">取消</el-buotton>
+			</div>
+		</el-dialog>
 	</div>
 
 </body>
@@ -105,7 +116,8 @@
 			step: 0,
 			cur_num: 0,
 			loaded: false,
-			form: { code: '' }
+			form: { code: '' },
+			confirmVisible: false
 		},
 		created() {
 			for (let i = 1; i <= 30; i++) {
@@ -141,12 +153,34 @@
 			},
 			input_number(e) {
 				let text = e.target.innerHTML;
-				if (text >= '0' && text <= '9') this.form.code += e.target.innerHTML;
-				else if (text === "删除") this.form.code = this.form.code.substring(0, this.form.code.length - 1)
-				else this.submit();
+				this.form.code += e.target.innerHTML;
 			},
-			submit() {
-				alert(this.form.code);
+			backspace() {
+				this.form.code = this.form.code.substring(0, this.form.code.length - 1)
+			},
+			confirm() {
+				this.confirmVisible = true;
+			},
+			async submit() {
+				let res = await axios({
+					method: 'post',
+					url: url + ':' + port + '/takeout_bin/adddata',
+					data: {
+						phoneNum: this.form.code,
+						location: String(this.cur_num)
+					}
+				})
+				.then((response) => {
+					let msg = response.data.message;
+					if (msg === 'success') {
+						alert('存放成功');
+						// 浏览器j本地记录更改，减少服务器资源占用
+						this.boxs[this.cur_num].status = 1;
+						this.step = 0;
+						this.confirmVisible = false;
+						this.form.code = '';
+					}
+				})
 			},
 			sign_out() {
 				window.location.replace('/');

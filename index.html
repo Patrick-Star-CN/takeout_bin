@@ -106,17 +106,19 @@
 							'Content-type': 'application/x-www-form-urlencode'
 						} */
 					})
-						.then(function (response) {
+						.then((response) => {
 							let msg = response.data.message;
 							if (msg === 'success') location.replace(arr[vm.member_status].url);
 							else {
+								console.log(this);
+								alert('fuck')
 								this.manager_account = '';
 								this.manager_passwd = '';
 								if (msg === 'wrong password') alert("密码错误");
 								else alert("用户名错误");
 							}
 						})
-						.catch(function (error) {
+						.catch((error) => {
 							console.log(error);
 						})
 				else {
