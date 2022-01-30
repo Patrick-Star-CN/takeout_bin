@@ -88,16 +88,15 @@
           </el-container>
         </el-container>
       </el-container>
-      <el-dialog :visible.sync="confirmVisible" title="确认存放信息">
+      <!-- <el-dialog :visible.sync="confirmVisible" title="确认存放信息">
         <el-descriptions title="外卖信息" direction="vertical" border>
         </el-descriptions>
         <el-divider></el-divider>
         <div class="dialog-footer">
-          <!--           <el-button type="primary" @click="submit">确认并提交</el-button>
- -->
+          <el-button type="primary" @click="submit">确认并提交</el-button>
           <el-button @click="confirmVisible=false">取消</el-button>
         </div>
-      </el-dialog>
+      </el-dialog> -->
     </div>
   </body>
 
@@ -142,6 +141,7 @@
         },
         async judge() {
           if (this.step) return this.takeOut();
+          if (this.form.code.length != 4) return;
           let res = await axios({
             method: "post",
             url: url + ":" + port + "/takeout_bin/judge",
@@ -263,6 +263,15 @@
       display: flex;
       flex-wrap: wrap;
       margin: 15px;
+    }
+
+    .key {
+      width: calc(100% / 3 - 2px);
+      height: 80px;
+      border: 1px solid black;
+      line-height: 80px;
+      font-size: 30px !important;
+      user-select: none;
     }
 
     .el-main {
