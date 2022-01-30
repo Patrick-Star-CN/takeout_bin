@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>外卖员操作中心</title>
+    <title>用户操作面板</title>
     <script src="/src/js/vue.js"></script>
     <script src="/src/js/element-ui.js"></script>
     <script src="/src/js/axios.js"></script>
@@ -37,7 +37,7 @@
           </el-aside>
           <el-container>
             <el-main>
-              <!-- input_takeout_info -->
+              <!-- input_takeout_code -->
               <div id="input-info">
                 <el-card class="box-card">
                   <div slot="header" class="clearfix">
@@ -111,7 +111,6 @@
         step: 0,
         loaded: false,
         form: { code: "" },
-        confirmVisible: false,
       },
       mounted() {
         // 固定 footer 在页面底部
@@ -141,9 +140,6 @@
             this.form.code.length - 1
           );
         },
-        confirm() {
-          this.confirmVisible = true;
-        },
         async judge() {
           if (this.step) return this.takeOut();
           let res = await axios({
@@ -157,22 +153,18 @@
               let msg = response.data.message;
               if (msg === "empty") {
                 alert("没有找到对应的外卖");
-                this.form.code = "";
               } else if (msg === "needWhole") {
                 alert("请输入完整手机号");
-                this.form.code = "";
                 this.step = 1;
               } else {
                 alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
-                // 浏览器j本地记录更改，减少服务器资源占用
                 this.step = 0;
-                this.confirmVisible = false;
-                this.form.code = "";
               }
             })
             .catch((error) => {
               alert(error);
             });
+          this.form.code = "";
         },
         async takeOut() {
           let res = await axios({
