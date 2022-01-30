@@ -53,9 +53,7 @@
                   @click="select"
                   v-if="box.status!==undefined"
                   :style="{backgroundColor: color[box.status]}"
-                >
-                  {{box.num}}
-                </div>
+                >{{box.num}}</div>
               </div>
               <!-- input_takeout_info -->
               <div id="input-info" v-if="step===1">
