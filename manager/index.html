@@ -1,300 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>外卖柜子管理中心</title>
+    <script src="/src/js/vue.js"></script>
+    <script src="/src/js/element-ui.js"></script>
+    <script src="/src/js/axios.js"></script>
+    <link rel="stylesheet" href="/src/css/element-ui.css" />
+  </head>
 
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>外卖柜子管理中心</title>
-	<script src="/src/js/vue.js"></script>
-	<script src="/src/js/element-ui.js"></script>
-	<script src="/src/js/axios.js"></script>
-	<link rel="stylesheet" href="/src/css/element-ui.css">
-</head>
+  <body>
+    <div id="app">
+      <el-container>
+        <el-header style="text-align: right">
+          <h2>外卖柜子管理中心</h2>
 
-<body>
-	<div id="app">
-		<el-container>
-			<el-header style="text-align: right;">
-				<h2>外卖柜子管理中心</h2>
+          <div
+            style="width: 120px; display: flex; justify-content: space-between"
+          >
+            <el-button type="danger" plain @click="sign_out">登出</el-button>
+          </div>
+        </el-header>
+        <el-container>
+          <el-aside width="200px">
+            <el-menu default-active="1">
+              <el-menu-item index="1">
+                <template slot="title">外卖柜总览</template>
+              </el-menu-item>
+              <el-menu-item index="2">
+                <template slot="title">查询筛选</template>
+              </el-menu-item>
+            </el-menu>
+          </el-aside>
+          <el-container>
+            <el-main>
+              <el-page-header
+                @back="switch_page"
+                :content="step ? '柜子具体信息': '选择一个空柜查看'"
+              ></el-page-header>
+              <!-- cabinet -->
+              <div id="cabinet" v-show="step===0">
+                <div
+                  v-for="box in 30"
+                  class="takeout-box box"
+                  @click="select"
+                  v-if="box && loaded"
+                  :style="{backgroundColor: boxColor(box)}"
+                >
+                  {{box}}
+                </div>
+              </div>
+              <!-- takeout_info -->
+              <div id="takeout_info" v-if="step===1">
+                <el-card class="box-card">
+                  <div slot="header" class="clearfix">
+                    <span>第 {{ cur_num }} 号柜</span>
+                  </div>
 
-				<div style="width: 120px; display: flex; justify-content: space-between;">
-					<el-button type="danger" plain @click="sign_out">登出</el-button>
-				</div>
-			</el-header>
-			<el-container>
-				<el-aside width="200px">
-					<el-menu default-active="1">
-						<el-menu-item index="1">
-							<template slot="title">外卖柜总览</template>
-						</el-menu-item>
-						<el-menu-item index="2">
-							<template slot="title">查询筛选</template>
-						</el-menu-item>
-					</el-menu>
-				</el-aside>
-				<el-container>
-					<el-main>
-						<el-page-header @back="switch_page" :content="step ? '输入存餐码': '选择一个空柜存放'"></el-page-header>
-						<!-- cabinet -->
-						<div id="cabinet" v-show="step===0">
-							<div v-for="box in 30" class="takeout-box box" @click="select" v-if="box && loaded"
-								:style="{backgroundColor: boxColor(box)}">{{box}}</div>
-						</div>
-						<!-- takeout_info -->
-						<div id="takeout_info" v-if="step===1">
-							<el-card class="box-card">
-
-								<div slot="header" class="clearfix">
-									<span>第 {{ cur_num }} 号柜</span>
-								</div>
-
-								<el-descriptions title="柜子信息" :column="2" border>
-									<el-descriptions-item label="柜号">{{ cur_num }}</el-descriptions-item>
-									<el-descriptions-item label="状态">
-										<el-tag :type="boxStatusType">{{ boxStatusTitle }}</el-tag>
-									</el-descriptions-item>
-									<el-descriptions-item label="存餐码" v-if="boxLinks[cur_num] !== undefined">
-										<el-tag>{{ items[boxLinks[cur_num]].phoneNum.substring(7, 11) }}</el-tag>
-									</el-descriptions-item>
-									<el-descriptions-item label="用户手机号码" v-if="boxLinks[cur_num] !== undefined">{{
-										items[boxLinks[cur_num]].phoneNum }}</el-descriptions-item>
-									<el-descriptions-item label="存放时间" :span="2" v-if="boxLinks[cur_num] !== undefined">{{ getTime }}
-									</el-descriptions-item>
-									<!-- <el-descriptions-item label="倒计时"
+                  <el-descriptions title="柜子信息" :column="2" border>
+                    <el-descriptions-item label="柜号"
+                      >{{ cur_num }}</el-descriptions-item
+                    >
+                    <el-descriptions-item label="状态">
+                      <el-tag :type="boxStatusType"
+                        >{{ boxStatusTitle }}</el-tag
+                      >
+                    </el-descriptions-item>
+                    <el-descriptions-item
+                      label="存餐码"
+                      v-if="boxLinks[cur_num] !== undefined"
+                    >
+                      <el-tag
+                        >{{ items[boxLinks[cur_num]].phoneNum.substring(7, 11)
+                        }}</el-tag
+                      >
+                    </el-descriptions-item>
+                    <el-descriptions-item
+                      label="用户手机号码"
+                      v-if="boxLinks[cur_num] !== undefined"
+                      >{{ items[boxLinks[cur_num]].phoneNum
+                      }}</el-descriptions-item
+                    >
+                    <el-descriptions-item
+                      label="存放时间"
+                      :span="2"
+                      v-if="boxLinks[cur_num] !== undefined"
+                      >{{ getTime }}
+                    </el-descriptions-item>
+                    <!-- <el-descriptions-item label="倒计时"
 										v-if="boxLinks[cur_num] !== undefined && !items[boxLinks[cur_num]].status">{{ count }}
 									</el-descriptions-item> -->
-								</el-descriptions>
-								<el-divider content-position="left">所有操作</el-divider>
-								<el-button round>打开前柜门</el-button>
-								<el-button round>打开后柜门</el-button>
-								<el-button round :disabled="boxLinks[cur_num] === undefined">给该用户发送短信</el-button>
-							</el-card>
-						</div>
+                  </el-descriptions>
+                  <el-divider content-position="left">所有操作</el-divider>
+                  <el-button round>打开前柜门</el-button>
+                  <el-button round>打开后柜门</el-button>
+                  <el-button round :disabled="boxLinks[cur_num] === undefined"
+                    >给该用户发送短信</el-button
+                  >
+                </el-card>
+              </div>
+            </el-main>
+            <el-footer
+              style="background-color: white; justify-content: space-evenly"
+            >
+              <span v-if="!step" style="color: #67c23a">#空柜子</span>
+              <span v-if="!step" style="color: #909399">#已占用</span>
+              <span v-if="!step" style="color: #e6a23c">#超时外卖</span>
+            </el-footer>
+          </el-container>
+        </el-container>
+      </el-container>
+    </div>
+  </body>
 
-					</el-main>
-					<el-footer style="background-color: white; justify-content: space-evenly;">
-						<span v-if="!step" style="color: #67C23A">#空柜子</span>
-						<span v-if="!step" style="color: #909399">#已占用</span>
-						<span v-if="!step" style="color: #E6A23C">#超时外卖</span>
-					</el-footer>
-				</el-container>
-			</el-container>
-		</el-container>
-	</div>
+  <script>
+    const url = "http://localhost";
+    const port = "8080";
+    const statusTitle = ["空闲", "已使用", "已超时"];
+    const boxStatus = ["success", "info", "warning"];
+    //创建Vue实例,得到 ViewModel
+    const vm = new Vue({
+      el: "#app",
+      data: {
+        loaded: false,
+        user: { name: "j10c" },
+        colorPad: ["#e1f3d8", "#e9e9eb", "#faecd8"], // empty, used, timeout
+        boxLinks: [],
+        items: [
+          {
+            id: undefined,
+            phobeNum: undefined,
+            location: undefined,
+            storageTime: undefined,
+            status: undefined,
+          },
+        ],
+        clientHeight: "",
+        step: 0,
+        cur_num: 0,
+      },
+      created() {
+        // axios 接收数据 TODO
+        this.getTakeoutData();
+      },
+      mounted() {
+        // 固定 footer 在页面底部
+        this.clientHeight = document.documentElement.clientHeight;
+        document.querySelector(".el-main").style.height =
+          this.clientHeight - 120 + "px";
+        window.onresize = function temp() {
+          this.clientHeight = document.documentElement.clientHeight;
+          this.clientHeight = this.clientHeight - 120 + "px";
+          console.log(this.clientHeight);
+          document.querySelector(".el-main").style.height = clientHeight;
+        };
+        // 倒计时
+        setInterval(() => {
+          for (let i = 1; i < this.items.length; i++) {
+            if (this.items[i].status) break;
+            else {
+              this.items[i].status =
+                new Date().getTime() - Number(this.items[i].storageTime) <
+                12 * 3600000
+                  ? 0
+                  : 1;
+            }
+          }
+        }, 1000); // 刷新间隔
+      },
+      methods: {
+        async getTakeoutData() {
+          let res = await axios({
+            method: "get",
+            url: url + ":" + port + "/takeout_bin/fetchdata",
+          });
+          this.loaded = true; // 加载完毕
+          let data = res.data.data;
+          vm.items.length = 1;
+          for (let i = 0; i < data.length; i++) {
+            let item = new Object();
+            item.id = data[i].id;
+            item.phoneNum = data[i].phoneNum;
+            item.storageTime = data[i].date;
+            item.location = data[i].location;
+            item.status =
+              new Date().getTime() - Number(item.storageTime) < 12 * 3600000
+                ? 0
+                : 1;
+            this.items.push(item);
+          }
+          this.boxLinks.length = 30;
+          for (let i = 1; i < this.items.length; i++) {
+            this.boxLinks[this.items[i].location] = i;
+          }
+        },
+        switch_page(f) {
+          if (this.step) this.step--; //返回选择页面
+        },
+        select(e) {
+          let element = e.target;
+          this.cur_num = element.innerHTML;
+          //element.classList.add('selected'); // 测试多选，以后在管理员页面使用
+          this.step++; // 进入下一步，输入存餐码
+        },
+        open(n) {
+          let msg = n ? "外侧柜门已经打开" : "内侧柜门已经打开";
+          alert(msg);
+        },
+        sign_out() {
+          window.location.replace("/");
+          // 删除登录信息 TODO
+        },
+      },
+      computed: {
+        boxColor() {
+          return function (n) {
+            if (this.boxLinks[n] === undefined) return this.colorPad[0];
+            else if (this.items[this.boxLinks[n]].status)
+              return this.colorPad[2];
+            else return this.colorPad[1];
+          };
+        },
+        getTime() {
+          let time = new Date(
+            Number(this.items[this.boxLinks[this.cur_num]].storageTime)
+          );
+          let y = time.getFullYear(),
+            m = time.getMonth() + 1,
+            d = time.getDate();
+          return (
+            y +
+            "-" +
+            (m < 10 ? "0" + m : m) +
+            "-" +
+            (d < 10 ? "0" + d : d) +
+            " " +
+            time.toTimeString().substr(0, 8)
+          );
+        },
+        boxStatusType() {
+          if (this.boxLinks[this.cur_num] === undefined) return boxStatus[0];
+          else if (this.items[this.boxLinks[this.cur_num]].status)
+            return boxStatus[2];
+          else return boxStatus[1];
+        },
+        boxStatusTitle() {
+          if (this.boxLinks[this.cur_num] === undefined) return statusTitle[0];
+          else if (this.items[this.boxLinks[this.cur_num]].status)
+            return statusTitle[2];
+          else return statusTitle[1];
+        },
+      },
+    });
+  </script>
+  <style>
+    * {
+      font-size: 20px !important;
+    }
 
-</body>
+    html {
+      font-family: "Helvetica Neue", Helvetica, "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+    }
 
-<script>
-	const url = 'http://localhost';
-	const port = '8080';
-	const statusTitle = ['空闲', '已使用', '已超时'];
-	const boxStatus = ['success', 'info', 'warning'];
-	//创建Vue实例,得到 ViewModel
-	const vm = new Vue({
-		el: '#app',
-		data: {
-			loaded: false,
-			user: { name: 'j10c' },
-			colorPad: ['#e1f3d8', '#e9e9eb', '#faecd8'], // empty, used, timeout
-			boxLinks: [],
-			items: [{
-				id: undefined,
-				phobeNum: undefined,
-				location: undefined,
-				storageTime: undefined,
-				status: undefined
-			}],
-			clientHeight: '',
-			step: 0,
-			cur_num: 0,
-		},
-		created() {
-			// axios 接收数据 TODO
-			this.getTakeoutData();
-		},
-		mounted() {
-			// 固定 footer 在页面底部
-			this.clientHeight = document.documentElement.clientHeight;
-			document.querySelector(".el-main").style.height = (this.clientHeight - 120) + 'px';
-			window.onresize = function temp() {
-				this.clientHeight = document.documentElement.clientHeight;
-				this.clientHeight = (this.clientHeight - 120) + 'px';
-				console.log(this.clientHeight);
-				document.querySelector(".el-main").style.height = clientHeight;
-			};
-			// 倒计时
-			setInterval(() => {
-				for (let i = 1; i < this.items.length; i++) {
-					if (this.items[i].status) break;
-					else {
-						this.items[i].status = (new Date().getTime() - Number(this.items[i].storageTime) < 12 * 3600000) ? 0 : 1;
-					}
-				}
-			}, 1000); // 刷新间隔
-		},
-		methods: {
-			async getTakeoutData() {
-				let res = await axios({
-					method: 'get',
-					url: url + ':' + port + '/takeout_bin/fetchdata'
-				})
-				this.loaded = true; // 加载完毕
-				let data = res.data.data;
-				vm.items.length = 1;
-				for (let i = 0; i < data.length; i++) {
-					let item = new Object();
-					item.id = data[i].id;
-					item.phoneNum = data[i].phoneNum;
-					item.storageTime = data[i].date;
-					item.location = data[i].location;
-					item.status = (new Date().getTime() - Number(item.storageTime) < 12 * 3600000) ? 0 : 1;
-					this.items.push(item);
-				}
-				this.boxLinks.length = 30;
-				for (let i = 1; i < this.items.length; i++) {
-					this.boxLinks[this.items[i].location] = i;
-				}
-			},
-			switch_page(f) {
-				if (this.step) this.step--; //返回选择页面
-			},
-			select(e) {
-				let element = e.target;
-				this.cur_num = element.innerHTML;
-				//element.classList.add('selected'); // 测试多选，以后在管理员页面使用
-				this.step++; // 进入下一步，输入存餐码
-			},
-			open(n) {
-				let msg = n ? '外侧柜门已经打开' : '内侧柜门已经打开'
-				alert(msg);
-			},
-			sign_out() {
-				window.location.replace('/');
-				// 删除登录信息 TODO
-			},
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
 
-		},
-		computed: {
-			boxColor() {
-				return function (n) {
-					if (this.boxLinks[n] === undefined) return this.colorPad[0];
-					else if (this.items[this.boxLinks[n]].status) return this.colorPad[2];
-					else return this.colorPad[1];
-				}
-			},
-			getTime() {
-				let time = new Date(Number(this.items[this.boxLinks[this.cur_num]].storageTime));
-				let y = time.getFullYear(), m = time.getMonth() + 1, d = time.getDate();
-				return y + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) + " " + time.toTimeString().substr(0, 8);
-			},
-			boxStatusType() {
-				if (this.boxLinks[this.cur_num] === undefined) return boxStatus[0];
-				else if (this.items[this.boxLinks[this.cur_num]].status) return boxStatus[2];
-				else return boxStatus[1];
-			},
-			boxStatusTitle() {
-				if (this.boxLinks[this.cur_num] === undefined) return statusTitle[0];
-				else if (this.items[this.boxLinks[this.cur_num]].status) return statusTitle[2];
-				else return statusTitle[1];
-			}
-		}
-	});
-</script>
-<style>
-	* {
-		font-size: 20px !important;
-	}
+    .el-button {
+      font-size: 20px !important;
+    }
 
-	html {
-		font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
-	}
+    .el-header,
+    .el-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #b3d8ff;
+      color: #333;
+      text-align: center;
+      line-height: 60px;
+    }
 
-	body {
-		margin: 0;
-		overflow: hidden;
-	}
+    .el-aside {
+      color: #333;
+      text-align: center;
+      line-height: 200px;
+    }
 
-	.el-button {
-		font-size: 20px !important;
-	}
+    .el-main {
+      color: #333;
+      text-align: center;
+    }
 
-	.el-header,
-	.el-footer {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		background-color: #b3d8ff;
-		color: #333;
-		text-align: center;
-		line-height: 60px;
-	}
+    #cabinet {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 30px;
+    }
 
-	.el-aside {
-		color: #333;
-		text-align: center;
-		line-height: 200px;
-	}
+    .takeout-box {
+      width: 15%;
+      height: 100px;
+      border: 1px solid black;
+      line-height: 100px;
+    }
 
-	.el-main {
-		color: #333;
-		text-align: center;
-	}
+    .el-main {
+      overflow: auto;
+    }
 
-	#cabinet {
-		display: flex;
-		flex-wrap: wrap;
-		margin: 30px;
-	}
+    .box {
+      font-size: 30px !important;
+    }
 
-	.takeout-box {
-		width: 15%;
-		height: 100px;
-		border: 1px solid black;
-		line-height: 100px;
-	}
+    .box:hover {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+        0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
 
-	.el-main {
-		overflow: auto;
-	}
+    .selected {
+      box-shadow: inset 1px 1px 10px 2px #409eff;
+    }
 
-	.box {
-		font-size: 30px !important;
-	}
+    .el-card {
+      margin: 30px;
+    }
 
-	.box:hover {
-		box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-	}
+    .item {
+      margin-bottom: 18px;
+    }
 
-	.selected {
-		box-shadow: inset 1px 1px 10px 2px #409EFF;
-	}
+    .clearfix:before,
+    .clearfix:after {
+      display: table;
+      content: "";
+    }
 
-	.el-card {
-		margin: 30px;
-	}
+    .clearfix:after {
+      clear: both;
+    }
 
-	.item {
-		margin-bottom: 18px;
-	}
+    .box-card {
+      width: 600px;
+    }
 
-	.clearfix:before,
-	.clearfix:after {
-		display: table;
-		content: "";
-	}
-
-	.clearfix:after {
-		clear: both
-	}
-
-	.box-card {
-		width: 600px;
-	}
-
-	.el-divider__text {
-		color: #dcdfe6;
-	}
-</style>
-
+    .el-divider__text {
+      color: #dcdfe6;
+    }
+  </style>
 </html>

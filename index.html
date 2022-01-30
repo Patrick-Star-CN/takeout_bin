@@ -1,77 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>test</title>
+    <script src="/src/js/vue.js"></script>
+    <script src="/src/js/element-ui.js"></script>
+    <script src="/src/js/axios.js"></script>
+    <link rel="stylesheet" href="/src/css/element-ui.css" />
+  </head>
 
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>test</title>
-	<script src="/src/js/vue.js"></script>
-	<script src="/src/js/element-ui.js"></script>
-	<script src="/src/js/axios.js"></script>
-	<link rel="stylesheet" href="/src/css/element-ui.css">
-</head>
+  <body>
+    <el-header>
+      <h1>梦溪外卖柜终端面板</h1>
+    </el-header>
+    <el-main id="app">
+      <el-button @click="turn(1)">用户</el-button>
+      <el-button @click="turn(2)">外卖员</el-button>
+      <el-button @click="turn(3)">管理员</el-button>
+      <el-dialog :visible.sync="visible1" :title="member">
+        <el-image src="/src/img/login_code.png" fit="fill"></el-image>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="login()">登录</el-button>
+        </div>
+      </el-dialog>
 
-<body>
-	<el-header>
-		<h1>梦溪外卖柜终端面板</h1>
-	</el-header>
-	<el-main id="app">
-		<el-button @click="turn(1)">用户</el-button>
-		<el-button @click="turn(2)">外卖员</el-button>
-		<el-button @click="turn(3)">管理员</el-button>
-		<el-dialog :visible.sync="visible1" :title="member">
-			<el-image src="/src/img/login_code.png" fit="fill"></el-image>
-			<div class="dialog-footer">
-				<el-button type="primary" @click="login()">登录</el-button>
-			</div>
-		</el-dialog>
+      <el-dialog :visible.sync="visible2" :title="member">
+        <el-image src="/src/img/login_code.png" fit="fill"></el-image>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="login()">登录</el-button>
+        </div>
+      </el-dialog>
 
-		<el-dialog :visible.sync="visible2" :title="member">
-			<el-image src="/src/img/login_code.png" fit="fill"></el-image>
-			<div class="dialog-footer">
-				<el-button type="primary" @click="login()">登录</el-button>
-			</div>
-		</el-dialog>
+      <el-dialog :visible.sync="visible3" :title="member">
+        <el-form>
+          <el-form-item label="账号">
+            <el-input v-model="manager_account"></el-input>
+          </el-form-item>
+          <el-form-item label="密码">
+            <el-input v-model="manager_passwd"></el-input>
+          </el-form-item>
+        </el-form>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="login()">登录</el-button>
+        </div>
+      </el-dialog>
+    </el-main>
+    <el-footer></el-footer>
+  </body>
 
-		<el-dialog :visible.sync="visible3" :title="member">
-			<el-form>
-				<el-form-item label="账号">
-					<el-input v-model="manager_account"></el-input>
-				</el-form-item>
-				<el-form-item label="密码">
-					<el-input v-model="manager_passwd"></el-input>
-				</el-form-item>
-			</el-form>
-			<div class="dialog-footer">
-				<el-button type="primary" @click="login()">登录</el-button>
-			</div>
-		</el-dialog>
-	</el-main>
-	<el-footer></el-footer>
-</body>
-
-<script>
-	let url = 'http://localhost'
-	let port = '8080';
-	let arr = [,
-		{ name: '用户', url: '/user' },
-		{ name: '外卖员', url: '/delivery' },
-		{ name: '管理员', url: '/manager' }
-	];
-	let backend_server = 'http://127.0.0.1:5500';
-	let vm = new Vue({
-		el: '#app',
-		data: {
-			member_status: 0,
-			visible1: false,
-			visible2: false,
-			visible3: false,
-			member: undefined,
-			manager_account: undefined,
-			manager_passwd: undefined,
-		},
-		/* mounted() {
+  <script>
+    let url = "http://localhost";
+    let port = "8080";
+    let arr = [
+      ,
+      { name: "用户", url: "/user" },
+      { name: "外卖员", url: "/delivery" },
+      { name: "管理员", url: "/manager" },
+    ];
+    let backend_server = "http://127.0.0.1:5500";
+    let vm = new Vue({
+      el: "#app",
+      data: {
+        member_status: 0,
+        visible1: false,
+        visible2: false,
+        visible3: false,
+        member: undefined,
+        manager_account: undefined,
+        manager_passwd: undefined,
+      },
+      /* mounted() {
 			 axios
 				.post(backend_server)
 				.then(response => (this.info = response))
@@ -79,72 +79,70 @@
 					console.log(error);
 				});
 		}, */
-		methods: {
-			turn(n) {
-				this.member = arr[n].name + " 登录";
-				this.member_status = n;
-				if (n === 1) {
-					this.visible1 = !this.visible1;
-				}
-				else if (n === 2) {
-					this.visible2 = !this.visible2;
-				}
-				else if (n === 3) {
-					this.visible3 = !this.visible3;
-				}
-			},
-			login() {
-				if (this.member_status === 3)
-					axios({
-						url: url + ':' + port + '/takeout_bin/adminlogin',
-						method: 'post',
-						data: {
-							name: this.manager_account,
-							password: this.manager_passwd
-						},
-						/* headers: {
+      methods: {
+        turn(n) {
+          this.member = arr[n].name + " 登录";
+          this.member_status = n;
+          if (n === 1) {
+            this.visible1 = !this.visible1;
+          } else if (n === 2) {
+            this.visible2 = !this.visible2;
+          } else if (n === 3) {
+            this.visible3 = !this.visible3;
+          }
+        },
+        login() {
+          if (this.member_status === 3)
+            axios({
+              url: url + ":" + port + "/takeout_bin/adminlogin",
+              method: "post",
+              data: {
+                name: this.manager_account,
+                password: this.manager_passwd,
+              },
+              /* headers: {
 							'Content-type': 'application/x-www-form-urlencode'
 						} */
-					})
-						.then((response) => {
-							let msg = response.data.message;
-							if (msg === 'success') location.replace(arr[vm.member_status].url);
-							else {
-								console.log(this);
-								alert('fuck')
-								this.manager_account = '';
-								this.manager_passwd = '';
-								if (msg === 'wrong password') alert("密码错误");
-								else alert("用户名错误");
-							}
-						})
-						.catch((error) => {
-							console.log(error);
-						})
-				else {
-					location.replace(arr[vm.member_status].url);
-				}
-			}
-		}
-	});
-</script>
+            })
+              .then((response) => {
+                let msg = response.data.message;
+                if (msg === "success")
+                  location.replace(arr[vm.member_status].url);
+                else {
+                  console.log(this);
+                  alert("fuck");
+                  this.manager_account = "";
+                  this.manager_passwd = "";
+                  if (msg === "wrong password") alert("密码错误");
+                  else alert("用户名错误");
+                }
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          else {
+            location.replace(arr[vm.member_status].url);
+          }
+        },
+      },
+    });
+  </script>
 
-<style>
-	.el-input {
-		width: 80%;
-	}
+  <style>
+    .el-input {
+      width: 80%;
+    }
 
-	.el-dialog {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 400px;
-	}
+    .el-dialog {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 400px;
+    }
 
-	.dialog-footer {
-		display: flex;
-		justify-content: center;
-	}
-</style>
-
+    .dialog-footer {
+      display: flex;
+      justify-content: center;
+    }
+  </style>
 </html>
