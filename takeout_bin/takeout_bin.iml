@@ -31,7 +31,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../tomcat/lib/servlet-api.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../tomcat/lib/servlet-api.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
