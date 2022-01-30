@@ -140,7 +140,7 @@
 					url: url + ':' + port + '/takeout_bin/fetchdata'
 				})
 				this.loaded = true; // 加载完毕
-				let data = res.data;
+				let data = res.data.data;
 				vm.items.length = 1;
 				for (let i = 0; i < data.length; i++) {
 					let item = new Object();
