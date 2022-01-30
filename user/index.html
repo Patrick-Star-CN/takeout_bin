@@ -1,60 +1,337 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>外卖员操作中心</title>
+    <script src="/src/js/vue.js"></script>
+    <script src="/src/js/element-ui.js"></script>
+    <script src="/src/js/axios.js"></script>
+    <link rel="stylesheet" href="/src/css/element-ui.css" />
+  </head>
 
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>user</title>
-	<script src="/src/js/vue.js"></script>
-	<script src="/src/js/element-ui.js"></script>
-	<script src="/src/js/axios.js"></script>
-	<link rel="stylesheet" href="/src/css/element-ui.css">
-</head>
+  <body>
+    <div id="app">
+      <el-container>
+        <el-header style="text-align: right">
+          <h2>用户操作面板</h2>
 
-<body>
-	<div id="app">
-		<el-container>
-			<el-aside width="200px">Aside</el-aside>
-			<el-container>
-				<el-header>Header</el-header>
-				<el-main>Main</el-main>
-				<el-footer>Footer</el-footer>
-			</el-container>
+          <div
+            style="width: 120px; display: flex; justify-content: space-between"
+          >
+            <!-- <el-avatar>{{user.name}}</el-avatar> -->
+            <el-button type="danger" plain @click="sign_out">登出</el-button>
+          </div>
+        </el-header>
+        <el-container>
+          <el-aside width="200px">
+            <el-menu default-active="1">
+              <el-menu-item index="1">
+                <template slot="title">取出外卖</template>
+              </el-menu-item>
+              <el-menu-item index="2">
+                <template slot="title">查询历史外卖</template>
+              </el-menu-item>
+            </el-menu>
+          </el-aside>
+          <el-container>
+            <el-main>
+              <!-- input_takeout_info -->
+              <div id="input-info">
+                <el-card class="box-card">
+                  <div slot="header" class="clearfix">
+                    <span>输入四位取餐码</span>
+                    <el-button
+                      style="float: right; padding: 3px 0"
+                      type="text"
+                      @click="form.code=''"
+                      >清空输入</el-button
+                    >
+                  </div>
 
-		</el-container>
-	</div>
+                  <el-form v-if="step" ref="form" :model="form">
+                    <el-form-item label="完整手机号">
+                      <el-input
+                        v-model="form.code"
+                        style="float: left; width: 80%"
+                      ></el-input>
+                    </el-form-item>
+                  </el-form>
+                  <h1 v-if="!step"><code>{{formatCode}}</code></h1>
+                  <!-- keyboard -->
+                  <div id="keyboard">
+                    <div class="key box" @click="input_number">1</div>
+                    <div class="key box" @click="input_number">2</div>
+                    <div class="key box" @click="input_number">3</div>
+                    <div class="key box" @click="input_number">4</div>
+                    <div class="key box" @click="input_number">5</div>
+                    <div class="key box" @click="input_number">6</div>
+                    <div class="key box" @click="input_number">7</div>
+                    <div class="key box" @click="input_number">8</div>
+                    <div class="key box" @click="input_number">9</div>
+                    <div class="key box" @click="backspace">删除</div>
+                    <div class="key box" @click="input_number">0</div>
+                    <div class="key box" @click="judge">提交</div>
+                  </div>
+                </el-card>
+              </div>
+            </el-main>
+            <el-footer
+              style="background-color: white; justify-content: space-evenly"
+            >
+              <span v-if="!step" style="color: #909399"
+                >#提示#
+                取餐码一般为外卖绑定手机四位尾号，若有重复，则继续输入完整手机号取餐</span
+              >
+            </el-footer>
+          </el-container>
+        </el-container>
+      </el-container>
+      <el-dialog :visible.sync="confirmVisible" title="确认存放信息">
+        <el-descriptions title="外卖信息" direction="vertical" border>
+        </el-descriptions>
+        <el-divider></el-divider>
+        <div class="dialog-footer">
+          <!--           <el-button type="primary" @click="submit">确认并提交</el-button>
+ -->
+          <el-button @click="confirmVisible=false">取消</el-button>
+        </div>
+      </el-dialog>
+    </div>
+  </body>
 
-</body>
+  <script>
+    const url = "http://localhost";
+    const port = "8080";
+    const vm = new Vue({
+      el: "#app",
+      data: {
+        clientHeight: "",
+        step: 0,
+        loaded: false,
+        form: { code: "" },
+        confirmVisible: false,
+      },
+      mounted() {
+        // 固定 footer 在页面底部
+        this.clientHeight = document.documentElement.clientHeight;
+        document.querySelector(".el-main").style.height =
+          this.clientHeight - 120 + "px";
+        window.onresize = function temp() {
+          this.clientHeight = document.documentElement.clientHeight;
+          this.clientHeight = this.clientHeight - 120 + "px";
+          console.log(this.clientHeight);
+          document.querySelector(".el-main").style.height = clientHeight;
+        };
+      },
+      methods: {
+        switch_page(f) {
+          if (this.step) this.step--; //返回选择页面
+          this.form.code = "";
+        },
+        input_number(e) {
+          if (this.form.code.length >= 4 && !this.step) return;
+          let text = e.target.innerHTML;
+          this.form.code += e.target.innerHTML;
+        },
+        backspace() {
+          this.form.code = this.form.code.substring(
+            0,
+            this.form.code.length - 1
+          );
+        },
+        confirm() {
+          this.confirmVisible = true;
+        },
+        async judge() {
+          if (this.step) return this.takeOut();
+          let res = await axios({
+            method: "post",
+            url: url + ":" + port + "/takeout_bin/judge",
+            data: {
+              code: this.form.code,
+            },
+          })
+            .then((response) => {
+              let msg = response.data.message;
+              if (msg === "empty") {
+                alert("没有找到对应的外卖");
+                this.form.code = "";
+              } else if (msg === "needWhole") {
+                alert("请输入完整手机号");
+                this.form.code = "";
+                this.step = 1;
+              } else {
+                alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
+                // 浏览器j本地记录更改，减少服务器资源占用
+                this.step = 0;
+                this.confirmVisible = false;
+                this.form.code = "";
+              }
+            })
+            .catch((error) => {
+              alert(error);
+            });
+        },
+        async takeOut() {
+          let res = await axios({
+            method: "post",
+            url: url + ":" + port + "/takeout_bin/takeout",
+            data: {
+              phoneNum: this.form.code,
+            },
+          })
+            .then((response) => {
+              let msg = response.data.message;
+              if (msg === "error") {
+                alert("无对应手机号");
+              } else {
+                alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
+              }
+            })
+            .catch((error) => {
+              alert(error);
+            });
+          this.form.code = "";
+          this.step = 0;
+        },
+        sign_out() {
+          window.location.replace("/");
+          // 删除登录信息 TODO
+        },
+        async getHistory() {
+          let res = await axios({
+            method: "get",
+            url: url + ":" + port + "/takeout_bin/fetchdata",
+          });
+          this.load = true;
+        },
+      },
+      computed: {
+        formatCode() {
+          let s = "";
+          for (let i = 0; i < this.form.code.length; i++)
+            s += this.form.code[i] + " ";
+          for (let i = 3; i >= this.form.code.length; i--) s += "* ";
+          console.log(s);
+          return s;
+        },
+      },
+    });
+  </script>
+  <style>
+    * {
+      font-size: 20px !important;
+    }
 
-<script>
-	//创建Vue实例,得到 ViewModel
-	var vm = new Vue({
-		el: '#app',
-		data: {},
-		methods: {}
-	});
-</script>
-<style>
-	  .el-header, .el-footer {
-    background-color: #B3C0D1;
-    color: #333;
-    text-align: center;
-    line-height: 60px;
-  }
-  
-  .el-aside {
-    background-color: #D3DCE6;
-    color: #333;
-    text-align: center;
-    line-height: 200px;
-  }
-  
-  .el-main {
-    background-color: #E9EEF3;
-    color: #333;
-    text-align: center;
-    line-height: 160px;
-  }
-</style>
+    html {
+      font-family: "Helvetica Neue", Helvetica, "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+    code {
+      font-size: 40px !important;
+    }
+    .el-button {
+      font-size: 20px !important;
+    }
+
+    .el-header,
+    .el-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #b3d8ff;
+      color: #333;
+      text-align: center;
+      line-height: 60px;
+    }
+
+    .el-aside {
+      color: #333;
+      text-align: center;
+      line-height: 200px;
+    }
+
+    .el-main {
+      color: #333;
+      text-align: center;
+    }
+
+    #cabinet {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 30px;
+    }
+
+    #keyboard {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 15px;
+    }
+
+    .takeout-box {
+      width: 15%;
+      height: 100px;
+      border: 1px solid black;
+      line-height: 100px;
+    }
+
+    .key {
+      width: calc(100% / 3 - 2px);
+      height: 80px;
+      border: 1px solid black;
+      line-height: 80px;
+      font-size: 30px;
+      user-select: none;
+    }
+
+    .el-main {
+      overflow: auto;
+    }
+
+    .box {
+      font-size: 30px !important;
+    }
+
+    .box:hover {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+        0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+
+    .selected {
+      box-shadow: inset 1px 1px 10px 2px #409eff;
+    }
+
+    .el-card {
+      margin: 30px;
+    }
+
+    .item {
+      margin-bottom: 18px;
+    }
+
+    .clearfix:before,
+    .clearfix:after {
+      display: table;
+      content: "";
+    }
+
+    .clearfix:after {
+      clear: both;
+    }
+
+    .box-card {
+      width: 600px;
+    }
+  </style>
 </html>
