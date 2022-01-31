@@ -47,4 +47,22 @@
         <servlet-name>Move</servlet-name>
         <url-pattern>/takeout</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>History</servlet-name>
+        <servlet-class>com.takeout.intergration.FetchHistoryServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>History</servlet-name>
+        <url-pattern>/getHistory</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ChangePwd</servlet-name>
+        <servlet-class>com.takeout.intergration.ChangePasswordServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ChangePwd</servlet-name>
+        <url-pattern>/changepwd</url-pattern>
+    </servlet-mapping>
 </web-app>

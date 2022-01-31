@@ -30,20 +30,24 @@ public class AddDataServlet extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Origin", "*");
         resp.setHeader("Access-Control-Allow-Methods", "GET,POST");
 
+        //获取前端传入的json与声明一些需要的对象
         JSONObject jsonIn = JsonReader.receivePost(req);
         JSONObject jsonOut = new JSONObject();
         ServletOutputStream out = resp.getOutputStream();
         TakeoutDataInbin inbin = new TakeoutDataInbin();
         String phoneNum = jsonIn.getString("phoneNum");
 
+        //根据设计好的方法要求，对传入的数据做一些处理
         inbin.setPhoneNum(phoneNum);
         inbin.setCode(phoneNum.substring(phoneNum.length() - 4));
         inbin.setCoordinate(Integer.parseInt(jsonIn.getString("location")));
 
+        //进行数据库连接，完成主题操作
         Connection conn = Sqlconn.conn();
         String res = ChangeData.insertDataToInbin(conn, inbin);
         Sqlconn.disconn(conn);
 
+        //设置好将要传出的json并传出
         jsonOut.put("message", res);
         out.print(jsonOut.toString());
     }

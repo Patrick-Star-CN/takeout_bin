@@ -18,6 +18,9 @@ public class FetchData {
             PreparedStatement psql = conn.prepareStatement(sql);
             psql.setString(1, phoneNum);
             ResultSet re = psql.executeQuery();
+            if(!re.isBeforeFirst()) {
+                return null;
+            }
             //将取出的数据存入history列表中
             List<TakeoutDataHistory> history = new ArrayList<TakeoutDataHistory>();
             while(re.next()) {
@@ -72,7 +75,7 @@ public class FetchData {
             PreparedStatement psql = conn.prepareStatement(sql);
             psql.setString(1, code);
             ResultSet re = psql.executeQuery();
-            if(!re.next()) {
+            if(!re.isBeforeFirst()) {
                 return 0;
             }
             if(re.isLast()) {
@@ -106,6 +109,9 @@ public class FetchData {
             psql.setString(1, code);
             ResultSet re = psql.executeQuery();
             TakeoutDataInbin inbin = new TakeoutDataInbin();
+            if(!re.isBeforeFirst()) {
+                return null;
+            }
             re.next();
             return getTakeoutDataInbin(psql, re, inbin);
         } catch (SQLException e) {
@@ -121,6 +127,9 @@ public class FetchData {
             PreparedStatement psql = conn.prepareStatement(sql);
             psql.setString(1, phoneNum);
             ResultSet re = psql.executeQuery();
+            if(!re.isBeforeFirst()) {
+                return null;
+            }
             re.next();
             TakeoutDataInbin inbin = new TakeoutDataInbin();
             return getTakeoutDataInbin(psql, re, inbin);

@@ -9,6 +9,7 @@ import java.sql.Timestamp;
  * @version: 1.5
  */
 public class TakeoutData {
+    //父结构体
     private int coordinate;
     private Timestamp date;
     private String phoneNum;

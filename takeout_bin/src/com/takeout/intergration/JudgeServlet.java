@@ -41,11 +41,12 @@ public class JudgeServlet extends HttpServlet {
         int re = FetchData.judge(conn, code);
         if(re == 1) {
             TakeoutDataInbin data = FetchData.fetchDate(conn, code);
-            res = Integer.toString(data.getId());
+            ChangeData.moveData(conn, data.getId());
+            res = Integer.toString(data.getCoordinate());
         } else if(re == 2) {
-            res = "1000001";
+            res = "needwhole";
         } else if(re == 0) {
-            res = "1000002";
+            res = "empty";
         }
         Sqlconn.disconn(conn);
 

@@ -15,6 +15,7 @@ import java.sql.*;
 
 public class AdminLogin {
     public static String LoginToInbin(Connection conn, String getAdminName, String getPassword) {
+        //管理员登录，判断用户名与密码与数据库中的是否一致
         String res = null;
         try {
             String sql = "select * from admin";
