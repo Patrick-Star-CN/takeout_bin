@@ -27,10 +27,10 @@
         <el-container>
           <el-aside width="200px">
             <el-menu default-active="1">
-              <el-menu-item index="1">
+              <el-menu-item index="1" @click="tab=0;loaded=false;form.code=''">
                 <template slot="title">取出外卖</template>
               </el-menu-item>
-              <el-menu-item index="2">
+              <el-menu-item index="2" @click="tab=1;step=0;form.code=''">
                 <template slot="title">查询历史外卖</template>
               </el-menu-item>
             </el-menu>
@@ -38,10 +38,13 @@
           <el-container>
             <el-main>
               <!-- input_takeout_code -->
-              <div id="input-info">
+              <div id="input-info" v-if="!loaded">
                 <el-card class="box-card">
                   <div slot="header" class="clearfix">
-                    <span>输入四位取餐码</span>
+                    <span
+                      >{{tab ? '输入完整手机号以查询历史记录' :
+                      '输入四位取餐码'}}</span
+                    >
                     <el-button
                       style="float: right; padding: 3px 0"
                       type="text"
@@ -50,15 +53,15 @@
                     >
                   </div>
 
-                  <el-form v-if="step" ref="form" :model="form">
-                    <el-form-item label="完整手机号">
+                  <el-form v-if="step||tab" ref="form" :model="form">
+                    <el-form-item :label="tab ? '手机号' : '完整手机号'">
                       <el-input
                         v-model="form.code"
                         style="float: left; width: 80%"
                       ></el-input>
                     </el-form-item>
                   </el-form>
-                  <h1 v-if="!step"><code>{{formatCode}}</code></h1>
+                  <h1 v-if="!step&&!tab"><code>{{formatCode}}</code></h1>
                   <!-- keyboard -->
                   <div id="keyboard">
                     <div class="key box" @click="input_number">1</div>
@@ -76,11 +79,43 @@
                   </div>
                 </el-card>
               </div>
+              <el-table
+                v-if="tab===1&&loaded"
+                :data="tableData"
+                stripe
+                style="width: 100%"
+              >
+                <el-table-column
+                  type="index"
+                  width="100"
+                  label="#"
+                ></el-table-column>
+                <el-table-column
+                  prop="id"
+                  label="外卖ID"
+                  width="200"
+                ></el-table-column>
+                <el-table-column
+                  prop="location"
+                  label="存放位置"
+                  width="200"
+                ></el-table-column>
+                <el-table-column
+                  prop="imdate"
+                  label="存放日期"
+                  width="300"
+                ></el-table-column>
+                <el-table-column
+                  prop="exdate"
+                  label="取出日期"
+                  width="300"
+                ></el-table-column>
+              </el-table>
             </el-main>
             <el-footer
               style="background-color: white; justify-content: space-evenly"
             >
-              <span v-if="!step" style="color: #909399"
+              <span v-if="step===0&&tab===0" style="color: #909399"
                 >#提示#
                 取餐码一般为外卖绑定手机四位尾号，若有重复，则继续输入完整手机号取餐</span
               >
@@ -88,15 +123,6 @@
           </el-container>
         </el-container>
       </el-container>
-      <!-- <el-dialog :visible.sync="confirmVisible" title="确认存放信息">
-        <el-descriptions title="外卖信息" direction="vertical" border>
-        </el-descriptions>
-        <el-divider></el-divider>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submit">确认并提交</el-button>
-          <el-button @click="confirmVisible=false">取消</el-button>
-        </div>
-      </el-dialog> -->
     </div>
   </body>
 
@@ -108,8 +134,10 @@
       data: {
         clientHeight: "",
         step: 0,
+        tab: 0,
         loaded: false,
         form: { code: "" },
+        tableData: [],
       },
       mounted() {
         // 固定 footer 在页面底部
@@ -129,7 +157,8 @@
           this.form.code = "";
         },
         input_number(e) {
-          if (this.form.code.length >= 4 && !this.step) return;
+          if (this.form.code.length >= 4 && !this.step && this.tab === 0)
+            return;
           let text = e.target.innerHTML;
           this.form.code += e.target.innerHTML;
         },
@@ -140,7 +169,9 @@
           );
         },
         async judge() {
-          if (this.step) return this.takeOut();
+          if (this.tab === 1 && this.form.code.length === 11)
+            return this.getHistory();
+          if (this.step && this.form.code.length === 11) return this.takeOut();
           if (this.form.code.length != 4) return;
           let res = await axios({
             method: "post",
@@ -192,12 +223,46 @@
           window.location.replace("/");
           // 删除登录信息 TODO
         },
+        formatTime(time) {
+          let y = time.getFullYear(),
+            m = time.getMonth() + 1,
+            d = time.getDate();
+          return (
+            y +
+            "-" +
+            (m < 10 ? "0" + m : m) +
+            "-" +
+            (d < 10 ? "0" + d : d) +
+            " " +
+            time.toTimeString().substr(0, 8)
+          );
+        },
         async getHistory() {
+					this.tableData = [];
+          this.tab = 1;
           let res = await axios({
-            method: "get",
-            url: url + ":" + port + "/takeout_bin/fetchdata",
+            method: "post",
+            url: url + ":" + port + "/takeout_bin/getHistory",
+            data: {
+              phoneNum: this.form.code,
+            },
+          }).then((response) => {
+            if ((response.data.message = "success")) {
+              this.loaded = true;
+              for (let i = 0; i < response.data.data.length; i++) {
+                let item = new Object();
+                item.id = response.data.data[i].id;
+                item.imdate = this.formatTime(
+                  new Date(Number(response.data.data[i].imdate))
+                );
+                item.exdate = this.formatTime(
+                  new Date(Number(response.data.data[i].exdate))
+                );
+                item.location = response.data.data[i].location;
+                this.tableData.push(item);
+              }
+            }
           });
-          this.load = true;
         },
       },
       computed: {
@@ -206,7 +271,6 @@
           for (let i = 0; i < this.form.code.length; i++)
             s += this.form.code[i] + " ";
           for (let i = 3; i >= this.form.code.length; i--) s += "* ";
-          console.log(s);
           return s;
         },
       },
@@ -270,14 +334,20 @@
       height: 80px;
       border: 1px solid black;
       line-height: 80px;
-      font-size: 30px !important;
       user-select: none;
     }
 
     .el-main {
       overflow: auto;
     }
+    .box {
+      font-size: 30px !important;
+    }
 
+    .box:hover {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+        0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
     .el-card {
       margin: 30px;
     }
