@@ -32,11 +32,12 @@ public class FetchHistoryServlet extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Origin", "*");
         resp.setHeader("Access-Control-Allow-Methods", "GET,POST");
 
+        JSONObject jsonIn = JsonReader.receivePost(req);
         JSONObject jsonOut = new JSONObject();
         JSONArray data = new JSONArray();
         JSONObject data_ = new JSONObject();
         ServletOutputStream out = resp.getOutputStream();
-        String phoneNum = req.getParameter("phoneNum");
+        String phoneNum = jsonIn.getString("phoneNum");
 
         Connection conn = Sqlconn.conn();
         List<TakeoutDataHistory> takeoutDataHistoryList = FetchData.fetchData(conn, phoneNum);
