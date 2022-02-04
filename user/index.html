@@ -70,7 +70,6 @@
             </div>
             <el-table v-if="tab===1&&loaded" :data="tableData" stripe style="width: 100%">
               <el-table-column type="index" width="100" label="#"></el-table-column>
-              <el-table-column prop="id" label="外卖ID" width="200"></el-table-column>
               <el-table-column prop="location" label="存放位置" width="200"></el-table-column>
               <el-table-column prop="imdate" label="存放日期" width="300"></el-table-column>
               <el-table-column prop="exdate" label="取出日期" width="300"></el-table-column>
@@ -211,7 +210,6 @@
             this.loaded = true;
             for (let i = 0; i < response.data.data.length; i++) {
               let item = new Object();
-              item.id = response.data.data[i].id;
               item.imdate = this.formatTime(
                 new Date(Number(response.data.data[i].imdate))
               );
