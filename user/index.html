@@ -1,369 +1,334 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>用户操作面板</title>
-    <script src="/src/js/vue.js"></script>
-    <script src="/src/js/element-ui.js"></script>
-    <script src="/src/js/axios.js"></script>
-    <link rel="stylesheet" href="/src/css/element-ui.css" />
-  </head>
 
-  <body>
-    <div id="app">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>用户操作面板</title>
+  <script src="/src/js/vue.js"></script>
+  <script src="/src/js/element-ui.js"></script>
+  <script src="/src/js/axios.js"></script>
+  <link rel="stylesheet" href="/src/css/element-ui.css" />
+</head>
+
+<body>
+  <div id="app">
+    <el-container>
+      <el-header style="text-align: right">
+        <h2>用户操作面板</h2>
+
+        <div style="width: 120px; display: flex; justify-content: space-between">
+          <!-- <el-avatar>{{user.name}}</el-avatar> -->
+          <el-button type="danger" plain @click="sign_out">登出</el-button>
+        </div>
+      </el-header>
       <el-container>
-        <el-header style="text-align: right">
-          <h2>用户操作面板</h2>
-
-          <div
-            style="width: 120px; display: flex; justify-content: space-between"
-          >
-            <!-- <el-avatar>{{user.name}}</el-avatar> -->
-            <el-button type="danger" plain @click="sign_out">登出</el-button>
-          </div>
-        </el-header>
+        <el-aside width="200px">
+          <el-menu default-active="1">
+            <el-menu-item index="1" @click="tab=0;loaded=false;form.code=''">
+              <template slot="title">取出外卖</template>
+            </el-menu-item>
+            <el-menu-item index="2" @click="tab=1;step=0;form.code=''">
+              <template slot="title">查询历史外卖</template>
+            </el-menu-item>
+          </el-menu>
+        </el-aside>
         <el-container>
-          <el-aside width="200px">
-            <el-menu default-active="1">
-              <el-menu-item index="1" @click="tab=0;loaded=false;form.code=''">
-                <template slot="title">取出外卖</template>
-              </el-menu-item>
-              <el-menu-item index="2" @click="tab=1;step=0;form.code=''">
-                <template slot="title">查询历史外卖</template>
-              </el-menu-item>
-            </el-menu>
-          </el-aside>
-          <el-container>
-            <el-main>
-              <!-- input_takeout_code -->
-              <div id="input-info" v-if="!loaded">
-                <el-card class="box-card">
-                  <div slot="header" class="clearfix">
-                    <span
-                      >{{tab ? '输入完整手机号以查询历史记录' :
-                      '输入四位取餐码'}}</span
-                    >
-                    <el-button
-                      style="float: right; padding: 3px 0"
-                      type="text"
-                      @click="form.code=''"
-                      >清空输入</el-button
-                    >
-                  </div>
+          <el-main>
+            <!-- input_takeout_code -->
+            <div id="input-info" v-if="!loaded">
+              <el-card class="box-card">
+                <div slot="header" class="clearfix">
+                  <span>{{tab ? '输入完整手机号以查询历史记录' :
+                    '输入四位取餐码'}}</span>
+                  <el-button style="float: right; padding: 3px 0" type="text" @click="form.code=''">清空输入</el-button>
+                </div>
 
-                  <el-form v-if="step||tab" ref="form" :model="form">
-                    <el-form-item :label="tab ? '手机号' : '完整手机号'">
-                      <el-input
-                        v-model="form.code"
-                        style="float: left; width: 80%"
-                      ></el-input>
-                    </el-form-item>
-                  </el-form>
-                  <h1 v-if="!step&&!tab"><code>{{formatCode}}</code></h1>
-                  <!-- keyboard -->
-                  <div id="keyboard">
-                    <div class="key box" @click="input_number">1</div>
-                    <div class="key box" @click="input_number">2</div>
-                    <div class="key box" @click="input_number">3</div>
-                    <div class="key box" @click="input_number">4</div>
-                    <div class="key box" @click="input_number">5</div>
-                    <div class="key box" @click="input_number">6</div>
-                    <div class="key box" @click="input_number">7</div>
-                    <div class="key box" @click="input_number">8</div>
-                    <div class="key box" @click="input_number">9</div>
-                    <div class="key box" @click="backspace">删除</div>
-                    <div class="key box" @click="input_number">0</div>
-                    <div class="key box" @click="judge">提交</div>
-                  </div>
-                </el-card>
-              </div>
-              <el-table
-                v-if="tab===1&&loaded"
-                :data="tableData"
-                stripe
-                style="width: 100%"
-              >
-                <el-table-column
-                  type="index"
-                  width="100"
-                  label="#"
-                ></el-table-column>
-                <el-table-column
-                  prop="id"
-                  label="外卖ID"
-                  width="200"
-                ></el-table-column>
-                <el-table-column
-                  prop="location"
-                  label="存放位置"
-                  width="200"
-                ></el-table-column>
-                <el-table-column
-                  prop="imdate"
-                  label="存放日期"
-                  width="300"
-                ></el-table-column>
-                <el-table-column
-                  prop="exdate"
-                  label="取出日期"
-                  width="300"
-                ></el-table-column>
-              </el-table>
-            </el-main>
-            <el-footer
-              style="background-color: white; justify-content: space-evenly"
-            >
-              <span v-if="step===0&&tab===0" style="color: #909399"
-                >#提示#
-                取餐码一般为外卖绑定手机四位尾号，若有重复，则继续输入完整手机号取餐</span
-              >
-            </el-footer>
-          </el-container>
+                <el-form v-if="step||tab" ref="form" :model="form">
+                  <el-form-item :label="tab ? '手机号' : '完整手机号'">
+                    <el-input v-model="form.code" style="float: left; width: 80%"></el-input>
+                  </el-form-item>
+                </el-form>
+                <h1 v-if="!step&&!tab"><code>{{formatCode}}</code></h1>
+                <!-- keyboard -->
+                <div id="keyboard">
+                  <div class="key box" @click="input_number">1</div>
+                  <div class="key box" @click="input_number">2</div>
+                  <div class="key box" @click="input_number">3</div>
+                  <div class="key box" @click="input_number">4</div>
+                  <div class="key box" @click="input_number">5</div>
+                  <div class="key box" @click="input_number">6</div>
+                  <div class="key box" @click="input_number">7</div>
+                  <div class="key box" @click="input_number">8</div>
+                  <div class="key box" @click="input_number">9</div>
+                  <div class="key box" @click="backspace">删除</div>
+                  <div class="key box" @click="input_number">0</div>
+                  <div class="key box" @click="judge">提交</div>
+                </div>
+              </el-card>
+            </div>
+            <el-table v-if="tab===1&&loaded" :data="tableData" stripe style="width: 100%">
+              <el-table-column type="index" width="100" label="#"></el-table-column>
+              <el-table-column prop="id" label="外卖ID" width="200"></el-table-column>
+              <el-table-column prop="location" label="存放位置" width="200"></el-table-column>
+              <el-table-column prop="imdate" label="存放日期" width="300"></el-table-column>
+              <el-table-column prop="exdate" label="取出日期" width="300"></el-table-column>
+            </el-table>
+          </el-main>
+          <el-footer style="background-color: white; justify-content: space-evenly">
+            <span v-if="step===0&&tab===0" style="color: #909399">#提示#
+              取餐码一般为外卖绑定手机四位尾号，若有重复，则继续输入完整手机号取餐</span>
+          </el-footer>
         </el-container>
       </el-container>
-    </div>
-  </body>
+    </el-container>
+  </div>
+</body>
 
-  <script>
-    const url = "http://localhost";
-    const port = "8080";
-    const vm = new Vue({
-      el: "#app",
-      data: {
-        clientHeight: "",
-        step: 0,
-        tab: 0,
-        loaded: false,
-        form: { code: "" },
-        tableData: [],
-      },
-      mounted() {
-        // 固定 footer 在页面底部
+<script>
+  const url = "http://localhost";
+  const port = "8080";
+  const vm = new Vue({
+    el: "#app",
+    data: {
+      clientHeight: "",
+      step: 0,
+      tab: 0,
+      loaded: false,
+      form: { code: "" },
+      tableData: [],
+    },
+    mounted() {
+      // 固定 footer 在页面底部
+      this.clientHeight = document.documentElement.clientHeight;
+      document.querySelector(".el-main").style.height =
+        this.clientHeight - 120 + "px";
+      window.onresize = function temp() {
         this.clientHeight = document.documentElement.clientHeight;
-        document.querySelector(".el-main").style.height =
-          this.clientHeight - 120 + "px";
-        window.onresize = function temp() {
-          this.clientHeight = document.documentElement.clientHeight;
-          this.clientHeight = this.clientHeight - 120 + "px";
-          console.log(this.clientHeight);
-          document.querySelector(".el-main").style.height = clientHeight;
-        };
+        this.clientHeight = this.clientHeight - 120 + "px";
+        console.log(this.clientHeight);
+        document.querySelector(".el-main").style.height = clientHeight;
+      };
+    },
+    methods: {
+      switch_page(f) {
+        if (this.step) this.step--; //返回选择页面
+        this.form.code = "";
       },
-      methods: {
-        switch_page(f) {
-          if (this.step) this.step--; //返回选择页面
-          this.form.code = "";
-        },
-        input_number(e) {
-          if (this.form.code.length >= 4 && !this.step && this.tab === 0)
-            return;
-          let text = e.target.innerHTML;
-          this.form.code += e.target.innerHTML;
-        },
-        backspace() {
-          this.form.code = this.form.code.substring(
-            0,
-            this.form.code.length - 1
-          );
-        },
-        async judge() {
-          if (this.tab === 1 && this.form.code.length === 11)
-            return this.getHistory();
-          if (this.step && this.form.code.length === 11) return this.takeOut();
-          if (this.form.code.length != 4) return;
-          let res = await axios({
-            method: "post",
-            url: url + ":" + port + "/takeout_bin/judge",
-            data: {
-              code: this.form.code,
-            },
-          })
-            .then((response) => {
-              let msg = response.data.message;
-              if (msg === "empty") {
-                alert("没有找到对应的外卖");
-              } else if (msg === "needwhole") {
-                alert("请输入完整手机号");
-                this.step = 1;
-              } else {
-                alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
-                this.step = 0;
-              }
-            })
-            .catch((error) => {
-              alert(error);
-            });
-          this.form.code = "";
-        },
-        async takeOut() {
-          let res = await axios({
-            method: "post",
-            url: url + ":" + port + "/takeout_bin/takeout",
-            data: {
-              phoneNum: this.form.code,
-            },
-          })
-            .then((response) => {
-              let msg = response.data.message;
-              if (msg === "error") {
-                alert("无对应手机号");
-              } else {
-                alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
-              }
-            })
-            .catch((error) => {
-              alert(error);
-            });
-          this.form.code = "";
-          this.step = 0;
-        },
-        sign_out() {
-          window.location.replace("/");
-          // 删除登录信息 TODO
-        },
-        formatTime(time) {
-          let y = time.getFullYear(),
-            m = time.getMonth() + 1,
-            d = time.getDate();
-          return (
-            y +
-            "-" +
-            (m < 10 ? "0" + m : m) +
-            "-" +
-            (d < 10 ? "0" + d : d) +
-            " " +
-            time.toTimeString().substr(0, 8)
-          );
-        },
-        async getHistory() {
-					this.tableData = [];
-          this.tab = 1;
-          let res = await axios({
-            method: "post",
-            url: url + ":" + port + "/takeout_bin/getHistory",
-            data: {
-              phoneNum: this.form.code,
-            },
-          }).then((response) => {
-            if ((response.data.message = "success")) {
-              this.loaded = true;
-              for (let i = 0; i < response.data.data.length; i++) {
-                let item = new Object();
-                item.id = response.data.data[i].id;
-                item.imdate = this.formatTime(
-                  new Date(Number(response.data.data[i].imdate))
-                );
-                item.exdate = this.formatTime(
-                  new Date(Number(response.data.data[i].exdate))
-                );
-                item.location = response.data.data[i].location;
-                this.tableData.push(item);
-              }
+      input_number(e) {
+        if (this.form.code.length >= 4 && !this.step && this.tab === 0)
+          return;
+        let text = e.target.innerHTML;
+        this.form.code += e.target.innerHTML;
+      },
+      backspace() {
+        this.form.code = this.form.code.substring(
+          0,
+          this.form.code.length - 1
+        );
+      },
+      async judge() {
+        if (this.tab === 1 && this.form.code.length === 11)
+          return this.getHistory();
+        if (this.step && this.form.code.length === 11) return this.takeOut();
+        if (this.form.code.length != 4) return;
+        let res = await axios({
+          method: "post",
+          url: url + ":" + port + "/takeout_bin/judge",
+          data: {
+            code: this.form.code,
+          },
+        })
+          .then((response) => {
+            let msg = response.data.message;
+            if (msg === "empty") {
+              alert("没有找到对应的外卖");
+            } else if (msg === "needwhole") {
+              alert("请输入完整手机号");
+              this.step = 1;
+            } else {
+              alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
+              this.step = 0;
             }
+          })
+          .catch((error) => {
+            alert(error);
           });
-        },
+        this.form.code = "";
       },
-      computed: {
-        formatCode() {
-          let s = "";
-          for (let i = 0; i < this.form.code.length; i++)
-            s += this.form.code[i] + " ";
-          for (let i = 3; i >= this.form.code.length; i--) s += "* ";
-          return s;
-        },
+      async takeOut() {
+        let res = await axios({
+          method: "post",
+          url: url + ":" + port + "/takeout_bin/takeout",
+          data: {
+            phoneNum: this.form.code,
+          },
+        })
+          .then((response) => {
+            let msg = response.data.message;
+            if (msg === "error") {
+              alert("无对应手机号");
+            } else {
+              alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
+            }
+          })
+          .catch((error) => {
+            alert(error);
+          });
+        this.form.code = "";
+        this.step = 0;
       },
-    });
-  </script>
-  <style>
-    * {
-      font-size: 20px !important;
-    }
+      sign_out() {
+        window.location.replace("/");
+        // 删除登录信息 TODO
+      },
+      formatTime(time) {
+        let y = time.getFullYear(),
+          m = time.getMonth() + 1,
+          d = time.getDate();
+        return (
+          y +
+          "-" +
+          (m < 10 ? "0" + m : m) +
+          "-" +
+          (d < 10 ? "0" + d : d) +
+          " " +
+          time.toTimeString().substr(0, 8)
+        );
+      },
+      async getHistory() {
+        this.tableData = [];
+        this.tab = 1;
+        let res = await axios({
+          method: "post",
+          url: url + ":" + port + "/takeout_bin/getHistory",
+          data: {
+            phoneNum: this.form.code,
+          },
+        }).then((response) => {
+          if ((response.data.message = "success")) {
+            this.loaded = true;
+            for (let i = 0; i < response.data.data.length; i++) {
+              let item = new Object();
+              item.id = response.data.data[i].id;
+              item.imdate = this.formatTime(
+                new Date(Number(response.data.data[i].imdate))
+              );
+              item.exdate = this.formatTime(
+                new Date(Number(response.data.data[i].exdate))
+              );
+              item.location = response.data.data[i].location;
+              this.tableData.push(item);
+            }
+          }
+        });
+      },
+    },
+    computed: {
+      formatCode() {
+        let s = "";
+        for (let i = 0; i < this.form.code.length; i++)
+          s += this.form.code[i] + " ";
+        for (let i = 3; i >= this.form.code.length; i--) s += "* ";
+        return s;
+      },
+    },
+  });
+</script>
+<style>
+  * {
+    font-size: 20px !important;
+  }
 
-    html {
-      font-family: "Helvetica Neue", Helvetica, "PingFang SC",
-        "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
-    }
+  html {
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  }
 
-    body {
-      margin: 0;
-      overflow: hidden;
-    }
+  body {
+    margin: 0;
+    overflow: hidden;
+  }
 
-    h1 {
-      margin-top: 0;
-    }
-    code {
-      font-size: 40px !important;
-    }
-    .el-button {
-      font-size: 20px !important;
-    }
+  h1 {
+    margin-top: 0;
+  }
 
-    .el-header,
-    .el-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: #b3d8ff;
-      color: #333;
-      text-align: center;
-      line-height: 60px;
-    }
+  code {
+    font-size: 40px !important;
+  }
 
-    .el-aside {
-      color: #333;
-      text-align: center;
-      line-height: 200px;
-    }
+  .el-button {
+    font-size: 20px !important;
+  }
 
-    .el-main {
-      color: #333;
-      text-align: center;
-    }
+  .el-header,
+  .el-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #b3d8ff;
+    color: #333;
+    text-align: center;
+    line-height: 60px;
+  }
 
-    #keyboard {
-      display: flex;
-      flex-wrap: wrap;
-      margin: 15px;
-    }
+  .el-aside {
+    color: #333;
+    text-align: center;
+    line-height: 200px;
+  }
 
-    .key {
-      width: calc(100% / 3 - 2px);
-      height: 80px;
-      border: 1px solid black;
-      line-height: 80px;
-      user-select: none;
-    }
+  .el-main {
+    color: #333;
+    text-align: center;
+  }
 
-    .el-main {
-      overflow: auto;
-    }
-    .box {
-      font-size: 30px !important;
-    }
+  #keyboard {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 15px;
+  }
 
-    .box:hover {
-      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
-        0 6px 20px 0 rgba(0, 0, 0, 0.19);
-    }
-    .el-card {
-      margin: 30px;
-    }
+  .key {
+    width: calc(100% / 3 - 2px);
+    height: 80px;
+    border: 1px solid black;
+    line-height: 80px;
+    user-select: none;
+  }
 
-    .clearfix:before,
-    .clearfix:after {
-      display: table;
-      content: "";
-    }
+  .el-main {
+    overflow: auto;
+  }
 
-    .clearfix:after {
-      clear: both;
-    }
+  .box {
+    font-size: 30px !important;
+  }
 
-    .box-card {
-      width: 600px;
-    }
-  </style>
+  .box:hover {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+      0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+
+  .el-card {
+    margin: 30px;
+  }
+
+  .clearfix:before,
+  .clearfix:after {
+    display: table;
+    content: "";
+  }
+
+  .clearfix:after {
+    clear: both;
+  }
+
+  .box-card {
+    width: 600px;
+  }
+</style>
+
 </html>
