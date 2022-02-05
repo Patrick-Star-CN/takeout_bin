@@ -48,28 +48,28 @@
             <div id="takeout_info" v-if="step===1">
               <el-card class="box-card">
                 <div slot="header" class="clearfix">
-                  <span>第 {{ cur_num }} 号柜</span>
+                  <span>第 {{ curNum }} 号柜</span>
                 </div>
 
                 <el-descriptions title="柜子信息" :column="2" border>
-                  <el-descriptions-item label="柜号">{{ cur_num }}</el-descriptions-item>
+                  <el-descriptions-item label="柜号">{{ curNum }}</el-descriptions-item>
                   <el-descriptions-item label="状态">
                     <el-tag :type="boxStatusType">{{ boxStatusTitle }}</el-tag>
                   </el-descriptions-item>
-                  <el-descriptions-item label="存餐码" v-if="boxLinks[cur_num] !== undefined">
-                    <el-tag>{{ items[boxLinks[cur_num]].phoneNum.substring(7, 11)
+                  <el-descriptions-item label="存餐码" v-if="boxLinks[curNum] !== undefined">
+                    <el-tag>{{ items[boxLinks[curNum]].phoneNum.substring(7, 11)
                       }}</el-tag>
                   </el-descriptions-item>
-                  <el-descriptions-item label="用户手机号码" v-if="boxLinks[cur_num] !== undefined">{{
-                    items[boxLinks[cur_num]].phoneNum
+                  <el-descriptions-item label="用户手机号码" v-if="boxLinks[curNum] !== undefined">{{
+                    items[boxLinks[curNum]].phoneNum
                     }}</el-descriptions-item>
-                  <el-descriptions-item label="存放时间" :span="2" v-if="boxLinks[cur_num] !== undefined">{{ getTime }}
+                  <el-descriptions-item label="存放时间" :span="2" v-if="boxLinks[curNum] !== undefined">{{ getTime }}
                   </el-descriptions-item>
                 </el-descriptions>
                 <el-divider content-position="left">所有操作</el-divider>
-                <el-button round>打开前柜门</el-button>
-                <el-button round>打开后柜门</el-button>
-                <el-button round :disabled="boxLinks[cur_num] === undefined">给该用户发送短信</el-button>
+                <el-button @click="openFront" round>打开前柜门</el-button>
+                <el-button @click="openBack" round>打开后柜门</el-button>
+                <el-button @click="sendMessage" round :disabled="boxLinks[curNum] === undefined">给该用户发送短信</el-button>
               </el-card>
             </div>
             <div id="modify_pwd" v-if="tab===3">
@@ -151,7 +151,7 @@
       focusInput: 1,
       step: 0,
       tab: 1,
-      cur_num: 0,
+      curNum: 0,
     },
     created() {
       // axios 接收数据
@@ -207,7 +207,7 @@
       },
       select(e) {
         let element = e.target;
-        this.cur_num = element.innerHTML;
+        this.curNum = element.innerHTML;
         //element.classList.add('selected'); // 测试多选，以后在管理员页面使用
         this.step++; // 进入下一步，输入存餐码
       },
@@ -254,6 +254,15 @@
             }
           })
       },
+      openFront() {
+        alert("第" + this.curNum + "号柜前柜门已经打开");
+      },
+      openBack() {
+        alert("第" + this.curNum + "号柜后柜门已经打开");
+      },
+      sendMessage() {
+        alert("短信以发送至用户手机");
+      },
       sign_out() {
         window.location.replace("/");
         // 删除登录信息 TODO
@@ -270,7 +279,7 @@
       },
       getTime() {
         let time = new Date(
-          Number(this.items[this.boxLinks[this.cur_num]].storageTime)
+          Number(this.items[this.boxLinks[this.curNum]].storageTime)
         );
         let y = time.getFullYear(),
           m = time.getMonth() + 1,
@@ -280,14 +289,14 @@
         );
       },
       boxStatusType() {
-        if (this.boxLinks[this.cur_num] === undefined) return boxStatus[0];
-        else if (this.items[this.boxLinks[this.cur_num]].status)
+        if (this.boxLinks[this.curNum] === undefined) return boxStatus[0];
+        else if (this.items[this.boxLinks[this.curNum]].status)
           return boxStatus[2];
         else return boxStatus[1];
       },
       boxStatusTitle() {
-        if (this.boxLinks[this.cur_num] === undefined) return statusTitle[0];
-        else if (this.items[this.boxLinks[this.cur_num]].status)
+        if (this.boxLinks[this.curNum] === undefined) return statusTitle[0];
+        else if (this.items[this.boxLinks[this.curNum]].status)
           return statusTitle[2];
         else return statusTitle[1];
       },
