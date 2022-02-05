@@ -109,6 +109,23 @@
         console.log(this.clientHeight);
         document.querySelector(".el-main").style.height = clientHeight;
       };
+      // 自动登出
+      const maxTime = 15; // seconds
+      var time = maxTime;
+      document.body.onkeydown = () => {
+        time = maxTime;
+      }
+      document.body.mousedown = () => {
+        time = maxTime;
+      }
+      var x = setInterval(() => {
+        time--;
+        if (time <= 0) {
+          clearInterval(x);
+          alert('您已经长时间没有操作了，将自动退出到首页');
+          window.location.replace('/');
+        }
+      }, 1000)
     },
     methods: {
       switch_page(f) {
