@@ -68,18 +68,10 @@
       visible1: false,
       visible2: false,
       visible3: false,
-      member: undefined,
-      manager_account: undefined,
-      manager_passwd: undefined,
+      member: '',
+      manager_account: '',
+      manager_passwd: '',
     },
-    /* mounted() {
-     axios
-      .post(backend_server)
-      .then(response => (this.info = response))
-      .catch(function (error) {
-        console.log(error);
-      });
-  }, */
     methods: {
       turn(n) {
         this.member = arr[n].name + " 登录";
@@ -93,6 +85,10 @@
         }
       },
       login() {
+        if (this.manager_account === '' || this.manager_passwd === '') {
+          alert("账号或者密码不能为空！");
+          return;
+        }
         if (this.member_status === 3)
           axios({
             url: url + ":" + port + "/takeout_bin/adminlogin",
@@ -101,9 +97,6 @@
               name: this.manager_account,
               password: this.manager_passwd,
             },
-            /* headers: {
-            'Content-type': 'application/x-www-form-urlencode'
-          } */
           })
             .then((response) => {
               let msg = response.data.message;

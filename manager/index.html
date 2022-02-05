@@ -152,7 +152,7 @@
       cur_num: 0,
     },
     created() {
-      // axios 接收数据 TODO
+      // axios 接收数据
       this.getTakeoutData();
     },
     mounted() {
@@ -172,10 +172,7 @@
           if (this.items[i].status) break;
           else {
             this.items[i].status =
-              new Date().getTime() - Number(this.items[i].storageTime) <
-                12 * 3600000
-                ? 0
-                : 1;
+              new Date().getTime() - Number(this.items[i].storageTime) < 12 * 3600000 ? 0 : 1;
           }
         }
       }, 1000); // 刷新间隔
@@ -276,13 +273,7 @@
         let y = time.getFullYear(),
           m = time.getMonth() + 1,
           d = time.getDate();
-        return (
-          y +
-          "-" +
-          (m < 10 ? "0" + m : m) +
-          "-" +
-          (d < 10 ? "0" + d : d) +
-          " " +
+        return (y + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) + " " +
           time.toTimeString().substr(0, 8)
         );
       },

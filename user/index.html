@@ -183,15 +183,7 @@
         let y = time.getFullYear(),
           m = time.getMonth() + 1,
           d = time.getDate();
-        return (
-          y +
-          "-" +
-          (m < 10 ? "0" + m : m) +
-          "-" +
-          (d < 10 ? "0" + d : d) +
-          " " +
-          time.toTimeString().substr(0, 8)
-        );
+        return (y + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) + " " + time.toTimeString().substr(0, 8));
       },
       async getHistory() {
         this.tableData = [];
