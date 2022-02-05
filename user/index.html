@@ -122,10 +122,7 @@
         this.form.code += e.target.innerHTML;
       },
       backspace() {
-        this.form.code = this.form.code.substring(
-          0,
-          this.form.code.length - 1
-        );
+        this.form.code = this.form.code.substring(0, this.form.code.length - 1);
       },
       async judge() {
         if (this.tab === 1 && this.form.code.length === 11)
