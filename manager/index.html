@@ -25,11 +25,14 @@
       <el-container>
         <el-aside width="200px">
           <el-menu default-active="1">
-            <el-menu-item index="1">
+            <el-menu-item index="1" @click="tab=1">
               <template slot="title">外卖柜总览</template>
             </el-menu-item>
-            <el-menu-item index="2">
+            <el-menu-item index="2" @click="tab=2">
               <template slot="title">查询筛选</template>
+            </el-menu-item>
+            <el-menu-item index="3" @click="tab=3">
+              <template slot="title">密码修改</template>
             </el-menu-item>
           </el-menu>
         </el-aside>
@@ -37,7 +40,7 @@
           <el-main>
             <el-page-header @back="switch_page" :content="step ? '柜子具体信息': '选择一个空柜查看'"></el-page-header>
             <!-- cabinet -->
-            <div id="cabinet" v-show="step===0">
+            <div id="cabinet" v-if="step===0&&tab===1">
               <div v-for="box in 30" class="takeout-box box" @click="select" v-if="box && loaded"
                 :style="{backgroundColor: boxColor(box)}">{{box}}</div>
             </div>
@@ -62,9 +65,6 @@
                     }}</el-descriptions-item>
                   <el-descriptions-item label="存放时间" :span="2" v-if="boxLinks[cur_num] !== undefined">{{ getTime }}
                   </el-descriptions-item>
-                  <!-- <el-descriptions-item label="倒计时"
-										v-if="boxLinks[cur_num] !== undefined && !items[boxLinks[cur_num]].status">{{ count }}
-									</el-descriptions-item> -->
                 </el-descriptions>
                 <el-divider content-position="left">所有操作</el-divider>
                 <el-button round>打开前柜门</el-button>
@@ -72,11 +72,46 @@
                 <el-button round :disabled="boxLinks[cur_num] === undefined">给该用户发送短信</el-button>
               </el-card>
             </div>
+            <div id="modify_pwd" v-if="tab===3">
+              <el-card class="box-card">
+                <div slot="header" class="clearfix">
+                  <span>请输入旧密码和新密码</span>
+                  <el-button style="float: right; padding: 3px 0" type="text" @click="form.newPwd='';form.oldPwd=''">
+                    清空输入</el-button>
+                </div>
+
+                <el-form ref="form" :model="form">
+                  <el-form-item label="旧密码">
+                    <el-input id="oldPwd" v-model="form.oldPwd" style="float: left; width: 80%" @focus="focusInput=1">
+                    </el-input>
+                  </el-form-item>
+                  <el-form-item label="新密码">
+                    <el-input id="newPwd" v-model="form.newPwd" style="float: left; width: 80%" @focus="focusInput=2">
+                    </el-input>
+                  </el-form-item>
+                </el-form>
+                <!-- keyboard -->
+                <div id="keyboard">
+                  <div class="key box" @click="input_number">1</div>
+                  <div class="key box" @click="input_number">2</div>
+                  <div class="key box" @click="input_number">3</div>
+                  <div class="key box" @click="input_number">4</div>
+                  <div class="key box" @click="input_number">5</div>
+                  <div class="key box" @click="input_number">6</div>
+                  <div class="key box" @click="input_number">7</div>
+                  <div class="key box" @click="input_number">8</div>
+                  <div class="key box" @click="input_number">9</div>
+                  <div class="key box" @click="backspace">删除</div>
+                  <div class="key box" @click="input_number">0</div>
+                  <div class="key box" @click="submitPwd">提交</div>
+                </div>
+              </el-card>
+            </div>
           </el-main>
           <el-footer style="background-color: white; justify-content: space-evenly">
-            <span v-if="!step" style="color: #67c23a">#空柜子</span>
-            <span v-if="!step" style="color: #909399">#已占用</span>
-            <span v-if="!step" style="color: #e6a23c">#超时外卖</span>
+            <span v-if="!step&&tab===1" style="color: #67c23a">#空柜子</span>
+            <span v-if="!step&&tab===1" style="color: #909399">#已占用</span>
+            <span v-if="!step&&tab===1" style="color: #e6a23c">#超时外卖</span>
           </el-footer>
         </el-container>
       </el-container>
@@ -106,8 +141,14 @@
           status: undefined,
         },
       ],
+      form: {
+        oldPwd: '',
+        newPwd: ''
+      },
       clientHeight: "",
+      focusInput: 1,
       step: 0,
+      tab: 1,
       cur_num: 0,
     },
     created() {
@@ -154,10 +195,7 @@
           item.phoneNum = data[i].phoneNum;
           item.storageTime = data[i].date;
           item.location = data[i].location;
-          item.status =
-            new Date().getTime() - Number(item.storageTime) < 12 * 3600000
-              ? 0
-              : 1;
+          item.status = new Date().getTime() - Number(item.storageTime) < 12 * 3600000 ? 0 : 1;
           this.items.push(item);
         }
         this.boxLinks.length = 30;
@@ -177,6 +215,45 @@
       open(n) {
         let msg = n ? "外侧柜门已经打开" : "内侧柜门已经打开";
         alert(msg);
+      },
+      input_number(e) {
+        let text = e.target.innerHTML;
+        if (this.focusInput === 1) {
+          this.form.oldPwd += text;
+        }
+        else if (this.focusInput === 2) {
+          this.form.newPwd += text;
+        }
+      },
+      backspace() {
+        if (this.focusInput === 1) {
+          this.form.oldPwd = this.form.oldPwd.substring(0, this.form.oldPwd.length - 1);
+        }
+        else if (this.focusInput === 2) {
+          this.form.newPwd = this.form.newPwd.substring(0, this.form.newPwd.length - 1);
+        }
+      },
+      submitPwd() {
+        let res = axios({
+          method: "post",
+          url: url + ':' + port + '/takeout_bin/changepwd',
+          data: {
+            oldpwd: this.form.oldPwd,
+            newpwd: this.form.newPwd
+          },
+        })
+          .then((response) => {
+            let msg = response.data.message;
+            if (msg === 'success') {
+              alert("修改成功，请重新登陆");
+              window.location.replace('/');
+            }
+            else {
+              alert("原密码错误，请重新输入");
+              this.form.newPwd = '';
+              this.form.oldPwd = '';
+            }
+          })
       },
       sign_out() {
         window.location.replace("/");
@@ -319,6 +396,20 @@
 
   .el-divider__text {
     color: #dcdfe6;
+  }
+
+  #keyboard {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 15px;
+  }
+
+  .key {
+    width: calc(100% / 3 - 2px);
+    height: 80px;
+    border: 1px solid black;
+    line-height: 80px;
+    user-select: none;
   }
 </style>
 
