@@ -38,14 +38,14 @@
         </el-aside>
         <el-container>
           <el-main>
-            <el-page-header @back="switch_page" :content="step ? '柜子具体信息': '选择一个空柜查看'"></el-page-header>
+            <el-page-header v-if="tab===1" @back="switch_page" :content="step ? '柜子具体信息': '选择一个空柜查看'"></el-page-header>
             <!-- cabinet -->
             <div id="cabinet" v-if="step===0&&tab===1">
               <div v-for="box in 30" class="takeout-box box" @click="select" v-if="box && loaded"
                 :style="{backgroundColor: boxColor(box)}">{{box}}</div>
             </div>
             <!-- takeout_info -->
-            <div id="takeout_info" v-if="step===1">
+            <div id="takeout_info" v-if="step===1&&tab===1">
               <el-card class="box-card">
                 <div slot="header" class="clearfix">
                   <span>第 {{ curNum }} 号柜</span>
