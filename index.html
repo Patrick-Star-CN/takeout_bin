@@ -87,7 +87,7 @@
         }
       },
       login() {
-        if (this.form.adminAccount === '' || this.form.adminPasswd === '') {
+        if (this.memberStatus === 3 && (this.form.adminAccount === '' || this.form.adminPasswd === '')) {
           alert("账号或者密码不能为空！");
           return;
         }
