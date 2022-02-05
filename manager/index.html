@@ -82,11 +82,13 @@
 
                 <el-form ref="form" :model="form">
                   <el-form-item label="旧密码">
-                    <el-input id="oldPwd" v-model="form.oldPwd" style="float: left; width: 80%" @focus="focusInput=1">
+                    <el-input id="oldPwd" v-model="form.oldPwd" style="float: left; width: 80%" @focus="focusInput=1"
+                      show-password>
                     </el-input>
                   </el-form-item>
                   <el-form-item label="新密码">
-                    <el-input id="newPwd" v-model="form.newPwd" style="float: left; width: 80%" @focus="focusInput=2">
+                    <el-input id="newPwd" v-model="form.newPwd" style="float: left; width: 80%" @focus="focusInput=2"
+                      show-password>
                     </el-input>
                   </el-form-item>
                 </el-form>
