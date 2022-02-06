@@ -29,9 +29,6 @@
             <el-menu-item index="1">
               <template slot="title">存放外卖</template>
             </el-menu-item>
-            <el-menu-item index="2">
-              <template slot="title">个人信息</template>
-            </el-menu-item>
           </el-menu>
         </el-aside>
         <el-container>
@@ -183,12 +180,13 @@
         }).then((response) => {
           let msg = response.data.message;
           if (msg === "success") {
-            alert("存放成功");
+            alert("第" + this.curNum + "号柜门已经打开，存放完毕后请及时关闭柜门");
             // 浏览器本地记录更改，减少服务器资源占用
             this.boxs[this.curNum].status = 1;
             this.step = 0;
             this.confirmVisible = false;
             this.form.code = "";
+            alert("系统已经自动向该用户发送短信");
           }
         });
       },
