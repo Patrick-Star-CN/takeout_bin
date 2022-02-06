@@ -184,7 +184,10 @@
       document.body.onkeydown = () => {
         time = maxTime;
       }
-      document.body.mousedown = () => {
+      document.body.onmousedown = () => {
+        time = maxTime;
+      }
+      document.body.onmousemove = () => {
         time = maxTime;
       }
       var y = setInterval(() => {
