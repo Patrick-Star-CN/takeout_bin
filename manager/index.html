@@ -72,6 +72,18 @@
                 <el-button @click="sendMessage" round :disabled="boxLinks[curNum] === undefined">给该用户发送短信</el-button>
               </el-card>
             </div>
+            <div id="inquiry" v-if="tab===2">
+              <span>选择柜子的状态以筛选：</span>
+              <el-select v-model="selectedStatus">
+                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+                </el-option>
+              </el-select>
+              <el-table :data="checkList" stripe style="width: 600px;margin: 30px auto">
+                <el-table-column type="index" width="100" label="#"></el-table-column>
+                <el-table-column prop="num" label="柜门号" width="500"></el-table-column>
+
+              </el-table>
+            </div>
             <div id="modify_pwd" v-if="tab===3">
               <el-card class="box-card">
                 <div slot="header" class="clearfix">
@@ -147,6 +159,17 @@
         oldPwd: '',
         newPwd: ''
       },
+      options: [{
+        value: 1,
+        label: '空柜'
+      }, {
+        value: 2,
+        label: '已存柜'
+      }, {
+        value: 3,
+        label: '已存且满12小时未取出'
+      }],
+      selectedStatus: 1,
       clientHeight: "",
       focusInput: 1,
       step: 0,
@@ -179,7 +202,7 @@
         }
       }, 1000); // 刷新间隔
       // 自动登出
-      const maxTime = 15; // seconds
+      const maxTime = 500; // seconds
       var time = maxTime;
       document.body.onkeydown = () => {
         time = maxTime;
@@ -217,7 +240,7 @@
           item.status = new Date().getTime() - Number(item.storageTime) < 12 * 3600000 ? 0 : 1;
           this.items.push(item);
         }
-        this.boxLinks.length = 30;
+        this.boxLinks.length = 31;
         for (let i = 1; i < this.items.length; i++) {
           this.boxLinks[this.items[i].location] = i;
         }
@@ -320,6 +343,27 @@
           return statusTitle[2];
         else return statusTitle[1];
       },
+      checkList() {
+        let arr = [];
+        if (this.selectedStatus === 1) {
+          for (let i = 1; i <= 30; i++) {
+            if (this.boxLinks[i] === undefined) arr.push({ num: i });
+          }
+        }
+        else if (this.selectedStatus === 2) {
+          for (let i = 1; i <= 30; i++) {
+            if (this.boxLinks[i] !== undefined && this.items[this.boxLinks[i]].status === 0)
+              arr.push({ num: i });
+          }
+        }
+        else if (this.selectedStatus === 3) {
+          for (let i = 1; i <= 30; i++) {
+            if (this.boxLinks[i] !== undefined && this.items[this.boxLinks[i]].status === 1)
+              arr.push({ num: i });
+          }
+        }
+        return arr;
+      }
     },
   });
 </script>
@@ -390,7 +434,7 @@
       0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
 
-  .selected {
+  .takeout-box .selected {
     box-shadow: inset 1px 1px 10px 2px #409eff;
   }
 
