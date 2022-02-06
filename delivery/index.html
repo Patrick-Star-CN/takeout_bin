@@ -74,8 +74,8 @@
             </div>
           </el-main>
           <el-footer style="background-color: white; justify-content: space-evenly">
-            <span v-if="!step" style="color: #67c23a">#绿色为空柜子</span>
-            <span v-if="!step" style="color: #909399">#灰色为已占用</span>
+            <span v-if="!step" style="color: #909399">#灰色为空柜子</span>
+            <span v-if="!step" style="color: #409eff">#蓝色为已占用</span>
           </el-footer>
         </el-container>
       </el-container>
@@ -101,8 +101,8 @@
     el: "#app",
     data: {
       user: { name: "j10c" },
-      color: ["#e1f3d8", "#e9e9eb"], // empty, used
       boxs: [{ num: undefined, status: undefined }],
+      color: ["#e9e9eb", "#c6e2ff"], // empty, used
       clientHeight: "",
       step: 0,
       curNum: 0,

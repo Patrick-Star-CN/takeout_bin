@@ -111,9 +111,9 @@
             </div>
           </el-main>
           <el-footer style="background-color: white; justify-content: space-evenly">
-            <span v-if="!step&&tab===1" style="color: #67c23a">#空柜子</span>
-            <span v-if="!step&&tab===1" style="color: #909399">#已占用</span>
-            <span v-if="!step&&tab===1" style="color: #e6a23c">#超时外卖</span>
+            <span v-if="!step&&tab===1" style="color: #909399">#空柜子</span>
+            <span v-if="!step&&tab===1" style="color: #409eff">#已占用</span>
+            <span v-if="!step&&tab===1" style="color: #f56c6c">#超时外卖</span>
           </el-footer>
         </el-container>
       </el-container>
@@ -125,14 +125,14 @@
   const url = "http://localhost";
   const port = "8080";
   const statusTitle = ["空闲", "已使用", "已超时"];
-  const boxStatus = ["success", "info", "warning"];
+  const boxStatus = ["info", "", "danger"];
+  const colorPad = ["#e9e9eb", "#c6e2ff", "#fde2e2"]; // empty, used, timeout
   //创建Vue实例,得到 ViewModel
   const vm = new Vue({
     el: "#app",
     data: {
       loaded: false,
       user: { name: "j10c" },
-      colorPad: ["#e1f3d8", "#e9e9eb", "#faecd8"], // empty, used, timeout
       boxLinks: [],
       items: [
         {
@@ -288,10 +288,10 @@
     computed: {
       boxColor() {
         return function (n) {
-          if (this.boxLinks[n] === undefined) return this.colorPad[0];
+          if (this.boxLinks[n] === undefined) return colorPad[0];
           else if (this.items[this.boxLinks[n]].status)
-            return this.colorPad[2];
-          else return this.colorPad[1];
+            return colorPad[2];
+          else return colorPad[1];
         };
       },
       getTime() {
