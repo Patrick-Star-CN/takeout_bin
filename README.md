@@ -1,3 +1,5 @@
+# takeout_bin
+
 # summary
 
 This is a project of takeout_bin, which is created by Team Cattle&Horse, for the Winter Vacation Software Design Competition of School of computer scinece and software, ZJUT.
@@ -124,4 +126,13 @@ public static String AdminLogin.LoginToInbin(Connection conn, String getAdminNam
     getPassword - the password of admin
 Returns:
     a message of login state */
+```
+
+# Usage
+
+```sh
+cd takeout_bin
+
+# open file index.html
+# choose your identity to login
 ```
