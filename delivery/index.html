@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>外卖员操作面板</title>
+  <script src="/src/js/vue.js"></script>
+  <script src="/src/js/element-ui.js"></script>
+  <script src="/src/js/axios.js"></script>
+  <link rel="stylesheet" href="/src/css/element-ui.css" />
+</head>
+
+<body>
+  <div id="app">
+    <el-container>
+      <el-header style="text-align: right">
+        <h2>外卖员操作中心</h2>
+
+        <div style="width: 120px; display: flex; justify-content: space-between">
+          <!-- <el-avatar>{{user.name}}</el-avatar> -->
+          <el-button type="danger" plain @click="sign_out">登出</el-button>
+        </div>
+      </el-header>
+      <el-container>
+        <el-aside width="200px">
+          <el-menu default-active="1">
+            <el-menu-item index="1">
+              <template slot="title">存放外卖</template>
+            </el-menu-item>
+          </el-menu>
+        </el-aside>
+        <el-container>
+          <el-main>
+            <el-page-header @back="switchPage" :content="step ? '输入存餐码': '选择一个空柜存放'"></el-page-header>
+            <!-- cabinet -->
+            <div id="cabinet" v-show="step===0">
+              <div v-for="box in boxs" class="takeout-box box" @click="select" v-if="box.status!==undefined"
+                :style="{backgroundColor: color[box.status]}">{{box.num}}</div>
+            </div>
+            <!-- input_takeout_info -->
+            <div id="input-info" v-if="step===1">
+              <el-card class="box-card">
+                <div slot="header" class="clearfix">
+                  <span>第 {{ curNum }} 号柜</span>
+                  <el-button style="float: right; padding: 3px 0" type="text" @click="form.code=''">清空输入</el-button>
+                </div>
+
+                <el-form ref="form" :model="form" label-width="80px">
+                  <el-form-item label="存餐码">
+                    <el-input v-model="form.code" style="float: left; width: 80%"></el-input>
+                  </el-form-item>
+                </el-form>
+                <!-- keyboard -->
+                <div id="keyboard">
+                  <div class="key box" @click="inputNumber">1</div>
+                  <div class="key box" @click="inputNumber">2</div>
+                  <div class="key box" @click="inputNumber">3</div>
+                  <div class="key box" @click="inputNumber">4</div>
+                  <div class="key box" @click="inputNumber">5</div>
+                  <div class="key box" @click="inputNumber">6</div>
+                  <div class="key box" @click="inputNumber">7</div>
+                  <div class="key box" @click="inputNumber">8</div>
+                  <div class="key box" @click="inputNumber">9</div>
+                  <div class="key box" @click="backspace">删除</div>
+                  <div class="key box" @click="inputNumber">0</div>
+                  <div class="key box" @click="confirm">提交</div>
+                </div>
+              </el-card>
+            </div>
+          </el-main>
+          <el-footer style="background-color: white; justify-content: space-evenly">
+            <span v-if="!step" style="color: #909399">#灰色为空柜子</span>
+            <span v-if="!step" style="color: #409eff">#蓝色为已占用</span>
+          </el-footer>
+        </el-container>
+      </el-container>
+    </el-container>
+    <el-dialog :visible.sync="confirmVisible" title="确认存放信息">
+      <el-descriptions title="外卖信息" direction="vertical" border>
+        <el-descriptions-item label="用户手机号码">{{ form.code }}</el-descriptions-item>
+        <el-descriptions-item label="存放柜子">第 {{ curNum }} 号柜</el-descriptions-item>
+      </el-descriptions>
+      <el-divider></el-divider>
+      <div class="dialog-footer">
+        <el-button type="primary" @click="submit">确认并提交</el-button>
+        <el-button @click="confirmVisible=false">取消</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</body>
+
+<script>
+  const url = "http://localhost";
+  const port = "8080";
+  const vm = new Vue({
+    el: "#app",
+    data: {
+      user: { name: "j10c" },
+      boxs: [{ num: undefined, status: undefined }],
+      color: ["#e9e9eb", "#c6e2ff"], // empty, used
+      clientHeight: "",
+      step: 0,
+      curNum: 0,
+      loaded: false,
+      form: { code: "" },
+      confirmVisible: false,
+    },
+    created() {
+      for (let i = 1; i <= 30; i++) {
+        this.boxs.push({ num: i, status: 0 });
+      }
+      this.getTakeoutData();
+    },
+    mounted() {
+      // 固定 footer 在页面底部
+      this.clientHeight = document.documentElement.clientHeight;
+      document.querySelector(".el-main").style.height =
+        this.clientHeight - 120 + "px";
+      window.onresize = function temp() {
+        this.clientHeight = document.documentElement.clientHeight;
+        this.clientHeight = this.clientHeight - 120 + "px";
+        console.log(this.clientHeight);
+        document.querySelector(".el-main").style.height = clientHeight;
+      };
+      // 自动登出
+      const maxTime = 15; // seconds
+      var time = maxTime;
+      document.body.onkeydown = () => {
+        time = maxTime;
+      }
+      document.body.onmousedown = () => {
+        time = maxTime;
+      }
+      document.body.onmousemove = () => {
+        time = maxTime;
+      }
+      var x = setInterval(() => {
+        time--;
+        if (time <= 0) {
+          clearInterval(x);
+          alert('您已经长时间没有操作了，将自动退出到首页');
+          window.location.replace('/');
+        }
+      }, 1000)
+    },
+    methods: {
+      switchPage(f) {
+        if (this.step) this.step--; //返回选择页面
+        this.form.code = "";
+      },
+      select(e) {
+        let element = e.target;
+        if (this.boxs[element.innerHTML].status) {
+          alert("柜子已经被占用！");
+          return;
+        }
+        this.curNum = element.innerHTML;
+        this.step++; // 进入下一步，输入存餐码
+      },
+      inputNumber(e) {
+        let text = e.target.innerHTML;
+        this.form.code += e.target.innerHTML;
+      },
+      backspace() {
+        this.form.code = this.form.code.substring(0, this.form.code.length - 1);
+      },
+      confirm() {
+        this.confirmVisible = true;
+      },
+      async submit() {
+        let res = await axios({
+          method: "post",
+          url: url + ":" + port + "/takeout_bin/adddata",
+          data: {
+            phoneNum: this.form.code,
+            location: String(this.curNum),
+          },
+        }).then((response) => {
+          let msg = response.data.message;
+          if (msg === "success") {
+            alert("第" + this.curNum + "号柜门已经打开，存放完毕后请及时关闭柜门");
+            // 浏览器本地记录更改，减少服务器资源占用
+            this.boxs[this.curNum].status = 1;
+            this.step = 0;
+            this.confirmVisible = false;
+            this.form.code = "";
+            alert("系统已经自动向该用户发送短信");
+          }
+        });
+      },
+      sign_out() {
+        window.location.replace("/");
+        // 删除登录信息 TODO
+      },
+      async getTakeoutData() {
+        let res = await axios({
+          method: "get",
+          url: url + ":" + port + "/takeout_bin/fetchdata",
+        });
+        this.load = true;
+        let data = res.data.data;
+        for (let i = 0; i < data.length; i++) {
+          this.boxs[data[i].location].status = 1;
+        }
+      },
+    },
+  });
+</script>
+<style>
+  * {
+    font-size: 20px !important;
+  }
+
+  html {
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  }
+
+  body {
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .el-button {
+    font-size: 20px !important;
+  }
+
+  .el-header,
+  .el-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #b3d8ff;
+    color: #333;
+    text-align: center;
+    line-height: 60px;
+  }
+
+  .el-aside {
+    color: #333;
+    text-align: center;
+    line-height: 200px;
+  }
+
+  .el-main {
+    color: #333;
+    text-align: center;
+  }
+
+  #cabinet {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 30px;
+  }
+
+  #keyboard {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 15px;
+  }
+
+  .takeout-box {
+    width: 15%;
+    height: 100px;
+    border: 1px solid black;
+    line-height: 100px;
+  }
+
+  .key {
+    width: calc(100% / 3 - 2px);
+    height: 80px;
+    border: 1px solid black;
+    line-height: 80px;
+    font-size: 30px;
+    user-select: none;
+  }
+
+  .el-main {
+    overflow: auto;
+  }
+
+  .box {
+    font-size: 30px !important;
+  }
+
+  .box:hover {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+      0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+
+  .selected {
+    box-shadow: inset 1px 1px 10px 2px #409eff;
+  }
+
+  .el-card {
+    margin: 30px;
+  }
+
+  .item {
+    margin-bottom: 18px;
+  }
+
+  .clearfix:before,
+  .clearfix:after {
+    display: table;
+    content: "";
+  }
+
+  .clearfix:after {
+    clear: both;
+  }
+
+  .box-card {
+    width: 600px;
+  }
+</style>
+
+</html>
