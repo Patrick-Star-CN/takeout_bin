@@ -78,10 +78,9 @@
                 <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
                 </el-option>
               </el-select>
-              <el-table :data="checkList" stripe style="width: 600px;margin: 30px auto">
+              <el-table :data="checkList" stripe style="width: 602px;margin: 30px auto" border>
                 <el-table-column type="index" width="100" label="#"></el-table-column>
                 <el-table-column prop="num" label="柜门号" width="500"></el-table-column>
-
               </el-table>
             </div>
             <div id="modify_pwd" v-if="tab===3">
