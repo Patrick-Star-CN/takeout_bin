@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# takeout_bin
-=======
 # takeout_bin
 
 ## Description
@@ -27,4 +24,3 @@ cd takeout_bin
 ### 2022/1/20
 - Creat the repo
 - Scrawled the home page
->>>>>>> 9b74f34a88264967be70ddd0d822320c4e8f7ae9
