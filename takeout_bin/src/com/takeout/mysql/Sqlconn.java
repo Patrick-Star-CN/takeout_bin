@@ -15,7 +15,7 @@ public class Sqlconn {
         String driver = "com.mysql.cj.jdbc.Driver";
         String url = "jdbc:mysql://localhost:3306/takeout_bin";
         String user = "root";
-        String password = "cxcxcx4,";
+        String password = "jjj10ccc!";
         Connection conn = null;
         try{
             Class.forName(driver);
