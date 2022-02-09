@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>牛牛马马外卖柜终端面板</title>
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios@0.25.0/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
@@ -45,7 +45,7 @@
         </div>
       </el-dialog>
 
-      <el-dialog :visible.sync="visible3" :title="member">
+      <el-dialog :visible.sync="visible3" :title="member" v-loading="loading">
         <el-form>
           <el-form-item label="账号">
             <el-input v-model="form.adminAccount"></el-input>
@@ -59,9 +59,9 @@
         </div>
       </el-dialog>
     </el-main>
-    <div @click="turn(3)" style="color: gray">管理员点击此处登陆</div>
+    <div class="tip" @click="turn(3)">管理员点击此处登陆</div>
     <el-footer>
-      <span style="color: gray; font-size: small">Copyright © 2022 By 牛牛马马团队</span>
+      <span class="tip">Copyright © 2022 By 牛牛马马团队</span>
     </el-footer>
   </el-container>
 
@@ -97,7 +97,8 @@
       form: {
         adminAccount: '',
         adminPasswd: '',
-      }
+      },
+      loading: false
     },
     methods: {
       turn(n) {
@@ -113,9 +114,13 @@
       },
       login() {
         if (this.memberStatus === 3 && (this.form.adminAccount === '' || this.form.adminPasswd === '')) {
-          alert("账号或者密码不能为空！");
+          this.$message({
+            message: '账号密码不能为空！',
+            type: 'warning'
+          })
           return;
         }
+        this.loading = true;
         if (this.memberStatus === 3)
           axios({
             url: url + ":" + port + "/takeout_bin/adminlogin",
@@ -132,14 +137,29 @@
               else {
                 this.form.adminAccount = "";
                 this.form.adminPasswd = "";
-                if (msg === "Wrong password") alert("密码错误");
-                else alert("用户名错误");
+                if (msg === "Wrong password")
+                  this.$message({
+                    message: '密码错误，请重新输入！',
+                    type: 'error'
+                  });
+                else
+                  this.$message({
+                    message: '用户名错误，请重新输入！',
+                    type: 'error'
+                  })
               }
+              this.loading = false;
             })
             .catch((error) => {
               console.log(error);
+              this.$message({
+                message: '与服务器连接失败！',
+                type: 'error'
+              });
+
+              this.loading = false;
             });
-        else {
+        else { // 非管理员登陆
           location.replace(arr[vm.memberStatus].url);
         }
       },
@@ -159,6 +179,10 @@
 </script>
 
 <style>
+  * {
+    font-size: 20px !important;
+  }
+
   body {
     margin: 0;
   }
@@ -186,6 +210,11 @@
   .dialog-footer {
     display: flex;
     justify-content: center;
+  }
+
+  .tip {
+    font-size: 15px !important;
+    color: gray;
   }
 </style>
 
