@@ -36,7 +36,7 @@
           <el-main>
             <el-page-header @back="switchPage" :content="step ? '输入存餐码': '选择一个空柜存放'"></el-page-header>
             <!-- cabinet -->
-            <div id="cabinet" v-show="step===0">
+            <div id="cabinet" v-show="step===0" v-loading="loading">
               <div v-for="box in boxs" class="takeout-box box" @click="select" v-if="box.status!==undefined"
                 :style="{backgroundColor: color[box.status]}">{{box.num}}</div>
             </div>
@@ -104,7 +104,7 @@
       clientHeight: "",
       step: 0,
       curNum: 0,
-      loaded: false,
+      loading: false,
       form: { code: "" },
       confirmVisible: false,
     },
@@ -122,29 +122,8 @@
       window.onresize = function temp() {
         this.clientHeight = document.documentElement.clientHeight;
         this.clientHeight = this.clientHeight - 120 + "px";
-        console.log(this.clientHeight);
         document.querySelector(".el-main").style.height = clientHeight;
       };
-      // 自动登出
-      const maxTime = 15; // seconds
-      var time = maxTime;
-      document.body.onkeydown = () => {
-        time = maxTime;
-      }
-      document.body.onmousedown = () => {
-        time = maxTime;
-      }
-      document.body.onmousemove = () => {
-        time = maxTime;
-      }
-      var x = setInterval(() => {
-        time--;
-        if (time <= 0) {
-          clearInterval(x);
-          alert('您已经长时间没有操作了，将自动退出到首页');
-          window.location.replace('/');
-        }
-      }, 1000)
     },
     methods: {
       switchPage(f) {
@@ -154,7 +133,10 @@
       select(e) {
         let element = e.target;
         if (this.boxs[element.innerHTML].status) {
-          alert("柜子已经被占用！");
+          this.$message({
+            message: '柜子已经被占用！',
+            type: 'warning'
+          })
           return;
         }
         this.curNum = element.innerHTML;
@@ -181,13 +163,25 @@
         }).then((response) => {
           let msg = response.data.message;
           if (msg === "success") {
-            alert("第" + this.curNum + "号柜门已经打开，存放完毕后请及时关闭柜门");
+            this.$message({
+              message: "第 <strong>" + this.curNum + "</strong> 号柜门已经打开，存放完毕后请及时关闭柜门",
+              dangerouslyUseHTMLString: true,
+              type: 'success',
+              duration: 5000
+            })
             // 浏览器本地记录更改，减少服务器资源占用
             this.boxs[this.curNum].status = 1;
             this.step = 0;
             this.confirmVisible = false;
             this.form.code = "";
-            alert("系统已经自动向该用户发送短信");
+            let content = "您的订单已存入牛牛马马外卖柜的 " + this.curNum + " 号格口，请及时取餐。入柜12小时后将被清理。";
+            this.$notify({
+              title: "已向用户发送短信",
+              dangerouslyUseHTMLString: true,
+              message: "<strong>内容为：</strong><br />" + content,
+              type: 'success',
+              duration: 0
+            })
           }
         });
       },
@@ -196,16 +190,58 @@
         // 删除登录信息 TODO
       },
       async getTakeoutData() {
-        let res = await axios({
+        this.loading = true;
+        await axios({
           method: "get",
           url: url + ":" + port + "/takeout_bin/fetchdata",
-        });
-        this.load = true;
-        let data = res.data.data;
-        for (let i = 0; i < data.length; i++) {
-          this.boxs[data[i].location].status = 1;
-        }
+        })
+          .then((response) => {
+            let data = response.data.data;
+            for (let i = 0; i < data.length; i++) {
+              this.boxs[data[i].location].status = 1;
+            }
+            this.loading = false;
+            this.countDown();
+          })
+          .catch((error) => {
+            console.log(error);
+            this.$message({
+              message: '与服务器连接失败！',
+              type: 'error'
+            })
+            this.$notify({
+              title: '错误',
+              message: '与服务器连接失败，请登出后重试',
+              type: 'error',
+              duration: 0
+            });
+          })
       },
+      countDown() {
+        const maxTime = 15; // seconds
+        var time = maxTime;
+        document.body.onkeydown = () => {
+          time = maxTime;
+        }
+        document.body.onmousedown = () => {
+          time = maxTime;
+        }
+        document.body.onmousemove = () => {
+          time = maxTime;
+        }
+        var x = setInterval(() => {
+          time--;
+          if (time === 5) vm.$notify({
+            title: '警告',
+            message: '您已经长时间没有操作了，即将自动登出到首页',
+            type: 'error'
+          })
+          if (time <= 0) {
+            clearInterval(x);
+            window.location.replace('/');
+          }
+        }, 1000)
+      }
     },
   });
 </script>
