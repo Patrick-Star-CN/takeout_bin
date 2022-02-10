@@ -23,25 +23,26 @@
           <el-button type="danger" plain @click="sign_out">登出</el-button>
         </div>
       </el-header>
-      <el-container>
+      <el-container v-loading="loading">
         <el-aside width="200px">
           <el-menu default-active="1">
-            <el-menu-item index="1" @click="tab=1">
+            <el-menu-item index="1" @click="switchPage(1)">
               <template slot="title">外卖柜总览</template>
             </el-menu-item>
-            <el-menu-item index="2" @click="tab=2">
+            <el-menu-item index="2" @click="switchPage(2)">
               <template slot="title">查询筛选</template>
             </el-menu-item>
-            <el-menu-item index="3" @click="tab=3">
+            <el-menu-item index="3" @click="switchPage(3)">
               <template slot="title">密码修改</template>
             </el-menu-item>
           </el-menu>
         </el-aside>
         <el-container>
           <el-main>
-            <el-page-header v-if="tab===1" @back="switch_page" :content="step ? '柜子具体信息': '选择一个空柜查看'"></el-page-header>
+            <el-page-header v-show="tab===1" @back="switchPage(1)" :content="step ? '柜子具体信息': '选择一个空柜查看'">
+            </el-page-header>
             <!-- cabinet -->
-            <div id="cabinet" v-if="step===0&&tab===1" v-loading="loading">
+            <div id="cabinet" v-if="step===0&&tab===1">
               <div v-for="box in 30" class="takeout-box box" @click="select" v-if="box"
                 :style="{backgroundColor: boxColor(box)}">{{box}}</div>
             </div>
@@ -70,7 +71,7 @@
                 <el-divider content-position="left">所有操作</el-divider>
                 <el-button style="font-size: small !important;" @click="open(0)" round>开内侧柜门</el-button>
                 <el-button style="font-size: small !important;" @click="open(1)" round>开外侧柜门</el-button>
-                <el-button style="font-size: small !important;" @click="sendMessage" round
+                <el-button style="font-size: small !important;" @click="sendMessage(false)" round
                   :disabled="boxLinks[curNum] === undefined">给该用户发送短信</el-button>
               </el-card>
             </div>
@@ -127,6 +128,7 @@
             <span v-if="!step&&tab===1" style="color: #909399">#空柜子</span>
             <span v-if="!step&&tab===1" style="color: #409eff">#已占用</span>
             <span v-if="!step&&tab===1" style="color: #f56c6c">#超时外卖</span>
+            <span v-if="tab===1&&step===1" style="color: #909399">#清理外卖请打开内侧柜门</span>
           </el-footer>
         </el-container>
       </el-container>
@@ -150,7 +152,7 @@
       items: [
         {
           id: undefined,
-          phobeNum: undefined,
+          phoneNum: undefined,
           location: undefined,
           storageTime: undefined,
           status: undefined,
@@ -168,7 +170,7 @@
         label: '已存柜'
       }, {
         value: 3,
-        label: '已存且满12小时未取出'
+        label: '已超时柜'
       }],
       selectedStatus: 1,
       clientHeight: "",
@@ -201,7 +203,7 @@
           }
         }
       }, 1000); // 刷新间隔
-
+      document.querySelector(".el-page-header__left").style.display = 'none';
     },
     methods: {
       async getTakeoutData() {
@@ -223,6 +225,7 @@
               this.items.push(item);
             }
             this.boxLinks.length = 31;
+            for (let i = 1; i <= 30; i++) this.boxLinks[i] = undefined;
             for (let i = 1; i < this.items.length; i++) {
               this.boxLinks[this.items[i].location] = i;
             }
@@ -245,7 +248,7 @@
 
       },
       countDown() {
-        const maxTime = 15; // seconds
+        const maxTime = 5000; // seconds
         var time = maxTime;
         document.body.onkeydown = () => {
           time = maxTime;
@@ -269,21 +272,69 @@
           }
         }, 1000)
       },
-      switch_page(f) {
-        if (this.step) this.step--; //返回选择页面
+      switchPage(n) {
+        this.tab = n;
+        if (this.step) this.step = 0; //返回选择页面
+        if (n === 1) document.querySelector(".el-page-header__left").style.display = 'none';
       },
       select(e) {
         let element = e.target;
         this.curNum = element.innerHTML;
         //element.classList.add('selected'); // 测试多选，以后在管理员页面使用
-        this.step++; // 进入下一步，输入存餐码
+        this.step = 1; // 进入下一步，输入存餐码
+        document.querySelector(".el-page-header__left").style.display = 'flex';
       },
       open(n) {
         let msg = n ? "外侧柜门已经打开" : "内侧柜门已经打开";
         this.$message({
           message: msg,
           type: 'success'
+        });
+        if (!n && this.boxLinks[this.curNum] !== undefined) this.$confirm(`是否清理第 ${this.curNum} 号柜中的外卖？`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.takeOut();
+          this.sendMessage(true);
+        }).catch(() => {
+          this.$message({
+            message: '未选择清理外卖'
+          })
         })
+
+      },
+      async takeOut() {
+        this.loading = true;
+        await axios({
+          method: "post",
+          url: url + ":" + port + "/takeout_bin/takeout",
+          data: {
+            phoneNum: this.items[this.boxLinks[this.curNum]].phoneNum
+          }
+        })
+          .then((response) => {
+            let msg = response.data.message;
+            this.$message({
+              message: `第 ${this.curNum} 号柜中的外卖已被清理！`,
+              type: 'success'
+            })
+            this.items.splice(this.boxLinks[this.curNum], 1);
+            this.boxLinks[this.curNum] = undefined;
+            for (let i = this.curNum; i <= 30; i++) {
+              if (this.boxLinks[i] === undefined) continue;
+              console.log(this.boxLinks[i])
+              this.boxLinks[i]--;
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+            this.$message({
+              message: '与服务器连接失败',
+              type: 'error'
+            })
+          })
+        this.loading = false;
       },
       input_number(e) {
         let text = e.target.innerHTML;
@@ -302,8 +353,9 @@
           this.form.newPwd = this.form.newPwd.substring(0, this.form.newPwd.length - 1);
         }
       },
-      submitPwd() {
-        let res = axios({
+      async submitPwd() {
+        this.loading = true;
+        await axios({
           method: "post",
           url: url + ':' + port + '/takeout_bin/changepwd',
           data: {
@@ -330,20 +382,28 @@
               this.form.oldPwd = '';
             }
           })
+          .catch((error) => {
+            console.log(error);
+            this.$message({
+              message: '与服务器连接失败',
+              type: 'error'
+            })
+          })
+        this.loading = false;
       },
-      sendMessage() {
+      sendMessage(force) {
         let content = '';
-        if (!this.items[this.boxLinks[this.curNum]].status)
-          content = "您的订单已存入牛牛马马外卖柜的 " + this.curNum + " 号格口，请及时取餐。入柜12小时后将被清理。";
-        else content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被处理"
+        if (force === false)
+          if (!this.items[this.boxLinks[this.curNum]].status)
+            content = "您的订单已存入牛牛马马外卖柜的 " + this.curNum + " 号格口，请及时取餐。入柜12小时后将被清理。";
+          else content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被清理"
+        else content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被清理"
         this.$notify({
           title: "已向用户发送短信",
           dangerouslyUseHTMLString: true,
           message: "<strong>内容为：</strong><br />" + content,
           type: 'success',
         })
-        console.log(content);
-
       },
       sign_out() {
         window.location.replace("/");
@@ -359,7 +419,7 @@
       },
     },
     computed: {
-      boxColor() {
+      boxColor(n) {
         return function (n) {
           if (this.boxLinks[n] === undefined) return colorPad[0];
           else if (this.items[this.boxLinks[n]].status)
@@ -405,6 +465,10 @@
               arr.push({ num: i });
           }
         }
+        this.$message({
+          message: `共查询到 ${arr.length} 个${this.options[this.selectedStatus - 1].label}`,
+          duration: 1000
+        })
         return arr;
       }
     }
@@ -413,6 +477,7 @@
 <style>
   * {
     font-size: 20px !important;
+    user-select: none;
   }
 
   html {
