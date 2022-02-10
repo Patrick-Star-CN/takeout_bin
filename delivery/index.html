@@ -78,7 +78,7 @@
         </el-container>
       </el-container>
     </el-container>
-    <el-dialog :visible.sync="confirmVisible" title="确认存放信息">
+    <el-dialog :visible.sync="confirmVisible" title="确认存放信息" v-loading="loading">
       <el-descriptions title="外卖信息" direction="vertical" border>
         <el-descriptions-item label="用户手机号码">{{ form.code }}</el-descriptions-item>
         <el-descriptions-item label="存放柜子">第 {{ curNum }} 号柜</el-descriptions-item>
@@ -124,11 +124,13 @@
         this.clientHeight = this.clientHeight - 120 + "px";
         document.querySelector(".el-main").style.height = clientHeight;
       };
+      document.querySelector(".el-page-header__left").style.display = 'none';
     },
     methods: {
-      switchPage(f) {
-        if (this.step) this.step--; //返回选择页面
+      switchPage() {
+        if (this.step) this.step = 0; //返回选择页面
         this.form.code = "";
+        document.querySelector(".el-page-header__left").style.display = 'none';
       },
       select(e) {
         let element = e.target;
@@ -140,7 +142,8 @@
           return;
         }
         this.curNum = element.innerHTML;
-        this.step++; // 进入下一步，输入存餐码
+        this.step = 1; // 进入下一步，输入存餐码
+        document.querySelector(".el-page-header__left").style.display = 'flex';
       },
       inputNumber(e) {
         let text = e.target.innerHTML;
@@ -150,10 +153,18 @@
         this.form.code = this.form.code.substring(0, this.form.code.length - 1);
       },
       confirm() {
+        if (this.form.code.length !== 11) {
+          this.$message({
+            message: '请输如正确格式的手机号',
+            type: 'warning'
+          })
+          return;
+        }
         this.confirmVisible = true;
       },
       async submit() {
-        let res = await axios({
+        this.loading = true;
+        await axios({
           method: "post",
           url: url + ":" + port + "/takeout_bin/adddata",
           data: {
@@ -171,7 +182,7 @@
             })
             // 浏览器本地记录更改，减少服务器资源占用
             this.boxs[this.curNum].status = 1;
-            this.step = 0;
+            this.switchPage();
             this.confirmVisible = false;
             this.form.code = "";
             let content = "您的订单已存入牛牛马马外卖柜的 " + this.curNum + " 号格口，请及时取餐。入柜12小时后将被清理。";
@@ -183,7 +194,15 @@
               duration: 0
             })
           }
-        });
+        })
+          .catch((error) => {
+            console.log(error);
+            this.$message({
+              message: '与服务器连接失败！',
+              type: 'error'
+            })
+          })
+        this.loading = false;
       },
       sign_out() {
         window.location.replace("/");
@@ -248,6 +267,7 @@
 <style>
   * {
     font-size: 20px !important;
+    user-select: none;
   }
 
   html {

@@ -26,20 +26,21 @@
       <el-container>
         <el-aside width="200px">
           <el-menu default-active="1">
-            <el-menu-item index="1" @click="tab=1">
+            <el-menu-item index="1" @click="switchPage(1)">
               <template slot="title">外卖柜总览</template>
             </el-menu-item>
-            <el-menu-item index="2" @click="tab=2">
+            <el-menu-item index="2" @click="switchPage(2)">
               <template slot="title">查询筛选</template>
             </el-menu-item>
-            <el-menu-item index="3" @click="tab=3">
+            <el-menu-item index="3" @click="switchPage(3)">
               <template slot="title">密码修改</template>
             </el-menu-item>
           </el-menu>
         </el-aside>
         <el-container>
           <el-main>
-            <el-page-header v-if="tab===1" @back="switch_page" :content="step ? '柜子具体信息': '选择一个空柜查看'"></el-page-header>
+            <el-page-header v-show="tab===1" @back="switchPage(1)" :content="step ? '柜子具体信息': '选择一个空柜查看'">
+            </el-page-header>
             <!-- cabinet -->
             <div id="cabinet" v-if="step===0&&tab===1" v-loading="loading">
               <div v-for="box in 30" class="takeout-box box" @click="select" v-if="box"
@@ -168,7 +169,7 @@
         label: '已存柜'
       }, {
         value: 3,
-        label: '已存且满12小时未取出'
+        label: '已超时柜'
       }],
       selectedStatus: 1,
       clientHeight: "",
@@ -201,7 +202,7 @@
           }
         }
       }, 1000); // 刷新间隔
-
+      document.querySelector(".el-page-header__left").style.display = 'none';
     },
     methods: {
       async getTakeoutData() {
@@ -269,14 +270,17 @@
           }
         }, 1000)
       },
-      switch_page(f) {
-        if (this.step) this.step--; //返回选择页面
+      switchPage(n) {
+        this.tab = n;
+        if (this.step) this.step = 0; //返回选择页面
+        if (n === 1) document.querySelector(".el-page-header__left").style.display = 'none';
       },
       select(e) {
         let element = e.target;
         this.curNum = element.innerHTML;
         //element.classList.add('selected'); // 测试多选，以后在管理员页面使用
-        this.step++; // 进入下一步，输入存餐码
+        this.step = 1; // 进入下一步，输入存餐码
+        document.querySelector(".el-page-header__left").style.display = 'flex';
       },
       open(n) {
         let msg = n ? "外侧柜门已经打开" : "内侧柜门已经打开";
@@ -335,7 +339,7 @@
         let content = '';
         if (!this.items[this.boxLinks[this.curNum]].status)
           content = "您的订单已存入牛牛马马外卖柜的 " + this.curNum + " 号格口，请及时取餐。入柜12小时后将被清理。";
-        else content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被处理"
+        else content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被清理"
         this.$notify({
           title: "已向用户发送短信",
           dangerouslyUseHTMLString: true,
@@ -405,6 +409,10 @@
               arr.push({ num: i });
           }
         }
+        this.$message({
+          message: `共查询到 ${arr.length} 个${this.options[this.selectedStatus - 1].label}`,
+          duration: 1000
+        })
         return arr;
       }
     }
@@ -413,6 +421,7 @@
 <style>
   * {
     font-size: 20px !important;
+    user-select: none;
   }
 
   html {
