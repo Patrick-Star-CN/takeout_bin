@@ -20,7 +20,6 @@
         <h2>用户操作面板</h2>
 
         <div style="width: 120px; display: flex; justify-content: space-between">
-          <!-- <el-avatar>{{user.name}}</el-avatar> -->
           <el-button type="danger" plain @click="sign_out">登出</el-button>
         </div>
       </el-header>
@@ -292,6 +291,10 @@
                 this.tableData.push(item);
               }
               this.loading = false;
+              this.$message({
+                message: `共查询到 ${response.data.data.length} 条历史记录`,
+                type: 'success'
+              })
             }
           })
           .catch((error) => {
