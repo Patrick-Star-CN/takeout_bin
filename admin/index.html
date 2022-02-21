@@ -193,7 +193,7 @@
         this.clientHeight = this.clientHeight - 120 + "px";
         document.querySelector(".el-main").style.height = clientHeight;
       };
-      // 倒计时
+      // 实时更新外卖过期状态
       let x = setInterval(() => {
         for (let i = 1; i < this.items.length; i++) {
           if (this.items[i].status) break;
@@ -203,7 +203,7 @@
           }
         }
       }, 1000); // 刷新间隔
-      document.querySelector(".el-page-header__left").style.display = 'none';
+      document.querySelector(".el-page-header__left").style.display = 'none'; // 隐藏主页返回按键
     },
     methods: {
       async getTakeoutData() {
@@ -280,8 +280,7 @@
       select(e) {
         let element = e.target;
         this.curNum = element.innerHTML;
-        //element.classList.add('selected'); // 测试多选，以后在管理员页面使用
-        this.step = 1; // 进入下一步，输入存餐码
+        this.step = 1;
         document.querySelector(".el-page-header__left").style.display = 'flex';
       },
       open(n) {
