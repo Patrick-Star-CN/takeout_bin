@@ -37,7 +37,7 @@
             <el-page-header @back="switchPage" :content="step ? '输入存餐码': '选择一个空柜存放'"></el-page-header>
             <!-- cabinet -->
             <div id="cabinet" v-show="step===0" v-loading="loading">
-              <div v-for="box in boxs" class="takeout-box box" @click="select" v-if="box.status!==undefined"
+              <div v-for="box in boxes" class="takeout-box box" @click="select" v-if="box.status!==undefined"
                 :style="{backgroundColor: color[box.status]}">{{box.num}}</div>
             </div>
             <!-- input_takeout_info -->
@@ -93,13 +93,13 @@
 </body>
 
 <script>
-  const url = "http://localhost";
+  const url = "http://8.130.13.33";
   const port = "8080";
   const vm = new Vue({
     el: "#app",
     data: {
       user: { name: "j10c" },
-      boxs: [{ num: undefined, status: undefined }],
+      boxes: [{ num: undefined, status: undefined }],
       color: ["#e9e9eb", "#c6e2ff"], // empty, used
       clientHeight: "",
       step: 0,
@@ -110,7 +110,7 @@
     },
     created() {
       for (let i = 1; i <= 30; i++) {
-        this.boxs.push({ num: i, status: 0 });
+        this.boxes.push({ num: i, status: 0 });
       }
       this.getTakeoutData();
     },
@@ -134,7 +134,7 @@
       },
       select(e) {
         let element = e.target;
-        if (this.boxs[element.innerHTML].status) {
+        if (this.boxes[element.innerHTML].status) {
           this.$message({
             message: '柜子已经被占用！',
             type: 'warning'
@@ -181,7 +181,7 @@
               duration: 5000
             })
             // 浏览器本地记录更改，减少服务器资源占用
-            this.boxs[this.curNum].status = 1;
+            this.boxes[this.curNum].status = 1;
             this.switchPage();
             this.confirmVisible = false;
             this.form.code = "";
@@ -217,7 +217,7 @@
           .then((response) => {
             let data = response.data.data;
             for (let i = 0; i < data.length; i++) {
-              this.boxs[data[i].location].status = 1;
+              this.boxes[data[i].location].status = 1;
             }
             this.loading = false;
             this.countDown();

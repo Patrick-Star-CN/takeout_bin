@@ -71,7 +71,7 @@
                 <el-divider content-position="left">所有操作</el-divider>
                 <el-button style="font-size: small !important;" @click="open(0)" round>开内侧柜门</el-button>
                 <el-button style="font-size: small !important;" @click="open(1)" round>开外侧柜门</el-button>
-                <el-button style="font-size: small !important;" @click="sendMessage(false)" round
+                <el-button style="font-size: small !important;" @click="sendMessage" round
                   :disabled="boxLinks[curNum] === undefined">给该用户发送短信</el-button>
               </el-card>
             </div>
@@ -137,7 +137,7 @@
 </body>
 
 <script>
-  const url = "http://localhost";
+  const url = "http://8.130.13.33";
   const port = "8080";
   const statusTitle = ["空闲", "已存放", "已超时"];
   const boxStatus = ["info", "", "danger"];
@@ -193,7 +193,7 @@
         this.clientHeight = this.clientHeight - 120 + "px";
         document.querySelector(".el-main").style.height = clientHeight;
       };
-      // 倒计时
+      // 实时更新外卖过期状态
       let x = setInterval(() => {
         for (let i = 1; i < this.items.length; i++) {
           if (this.items[i].status) break;
@@ -203,7 +203,7 @@
           }
         }
       }, 1000); // 刷新间隔
-      document.querySelector(".el-page-header__left").style.display = 'none';
+      document.querySelector(".el-page-header__left").style.display = 'none'; // 隐藏主页返回按键
     },
     methods: {
       async getTakeoutData() {
@@ -280,8 +280,7 @@
       select(e) {
         let element = e.target;
         this.curNum = element.innerHTML;
-        //element.classList.add('selected'); // 测试多选，以后在管理员页面使用
-        this.step = 1; // 进入下一步，输入存餐码
+        this.step = 1;
         document.querySelector(".el-page-header__left").style.display = 'flex';
       },
       open(n) {
@@ -296,7 +295,6 @@
           type: 'warning'
         }).then(() => {
           this.takeOut();
-          this.sendMessage(true);
         }).catch(() => {
           this.$message({
             message: '未选择清理外卖'
@@ -319,11 +317,17 @@
               message: `第 ${this.curNum} 号柜中的外卖已被清理！`,
               type: 'success'
             })
+            let content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被清理"
+            this.$notify({
+              title: "已向用户发送短信",
+              dangerouslyUseHTMLString: true,
+              message: "<strong>内容为：</strong><br />" + content,
+              type: 'success',
+            })
             this.items.splice(this.boxLinks[this.curNum], 1);
             this.boxLinks[this.curNum] = undefined;
             for (let i = this.curNum; i <= 30; i++) {
               if (this.boxLinks[i] === undefined) continue;
-              console.log(this.boxLinks[i])
               this.boxLinks[i]--;
             }
           })
@@ -391,12 +395,10 @@
           })
         this.loading = false;
       },
-      sendMessage(force) {
+      sendMessage() {
         let content = '';
-        if (force === false)
-          if (!this.items[this.boxLinks[this.curNum]].status)
-            content = "您的订单已存入牛牛马马外卖柜的 " + this.curNum + " 号格口，请及时取餐。入柜12小时后将被清理。";
-          else content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被清理"
+        if (!this.items[this.boxLinks[this.curNum]].status)
+          content = "您的订单已存入牛牛马马外卖柜的 " + this.curNum + " 号格口，请及时取餐。入柜12小时后将被清理。";
         else content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被清理"
         this.$notify({
           title: "已向用户发送短信",

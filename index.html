@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>牛牛马马外卖柜终端面板</title>
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios@0.25.0/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
@@ -68,13 +68,13 @@
 </body>
 
 <script>
-  const url = "http://localhost";
+  const url = "http://8.130.13.33";
   const port = "8080";
   const arr = [
     ,
     { name: "用户", url: "/user" },
     { name: "外卖员", url: "/delivery" },
-    { name: "管理员", url: "/manager" },
+    { name: "管理员", url: "/admin" },
   ];
   const backend_server = "http://127.0.0.1:5500";
   const dayText = [
