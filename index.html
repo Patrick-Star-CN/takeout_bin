@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>牛牛马马外卖柜终端面板</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.25.0/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
+</head>
+
+<body>
+  <el-container id="app">
+    <el-header>
+      <h1 style="display: inline-block">牛牛马马外卖柜</h1>
+      <span>{{dayCount}}</span>
+    </el-header>
+    <el-main>
+      <el-row type="flex" justify="center">
+        <el-col :span="6" v-for="(o, index) in 2" :key="o" :offset="index > 0 ? 2 : 0">
+          <el-card :body-style="{padding: '0px'}" @click.native="turn(o)">
+            <img :src="imgSource(index)" class="image" />
+            <div style="padding: 14px;">
+              <center>
+                <h2>{{index ? '外卖员登陆' : '用户登陆'}}</h2>
+              </center>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-dialog :visible.sync="visible1" :title="member">
+        <el-image src="/src/img/loginCode.png" fit="fill"></el-image>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="login()">登录</el-button>
+        </div>
+      </el-dialog>
+
+      <el-dialog :visible.sync="visible2" :title="member">
+        <el-image src="/src/img/loginCode.png" fit="fill"></el-image>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="login()">登录</el-button>
+        </div>
+      </el-dialog>
+
+      <el-dialog :visible.sync="visible3" :title="member" v-loading="loading">
+        <el-form>
+          <el-form-item label="账号">
+            <el-input v-model="form.adminAccount"></el-input>
+          </el-form-item>
+          <el-form-item label="密码">
+            <el-input v-model="form.adminPasswd" show-password></el-input>
+          </el-form-item>
+        </el-form>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="login">登录</el-button>
+        </div>
+      </el-dialog>
+    </el-main>
+    <div class="tip" @click="turn(3)">管理员点击此处登陆</div>
+    <el-footer>
+      <span class="tip">Copyright © 2022 By 牛牛马马团队</span>
+    </el-footer>
+  </el-container>
+
+</body>
+
+<script>
+  const url = "http://8.130.13.33";
+  const port = "8080";
+  const arr = [
+    ,
+    { name: "用户", url: "/user" },
+    { name: "外卖员", url: "/delivery" },
+    { name: "管理员", url: "/admin" },
+  ];
+  const backend_server = "http://127.0.0.1:5500";
+  const dayText = [
+    '星期日',
+    '星期一',
+    '星期二',
+    '星期三',
+    '疯狂星期四！',
+    '星期五',
+    '星期六',
+  ]
+  let vm = new Vue({
+    el: "#app",
+    data: {
+      memberStatus: 0,
+      visible1: false,
+      visible2: false,
+      visible3: false,
+      member: '',
+      form: {
+        adminAccount: '',
+        adminPasswd: '',
+      },
+      loading: false
+    },
+    methods: {
+      turn(n) {
+        this.member = arr[n].name + " 登录";
+        this.memberStatus = n;
+        if (n === 1) {
+          this.visible1 = !this.visible1;
+        } else if (n === 2) {
+          this.visible2 = !this.visible2;
+        } else if (n === 3) {
+          this.visible3 = !this.visible3;
+        }
+      },
+      login() {
+        if (this.memberStatus === 3 && (this.form.adminAccount === '' || this.form.adminPasswd === '')) {
+          this.$message({
+            message: '账号密码不能为空！',
+            type: 'warning'
+          })
+          return;
+        }
+        this.loading = true;
+        if (this.memberStatus === 3)
+          axios({
+            url: url + ":" + port + "/takeout_bin/adminlogin",
+            method: "post",
+            data: {
+              name: this.form.adminAccount,
+              password: this.form.adminPasswd,
+            },
+          })
+            .then((response) => {
+              let msg = response.data.message;
+              if (msg === "success")
+                location.replace(arr[vm.memberStatus].url);
+              else {
+                this.form.adminAccount = "";
+                this.form.adminPasswd = "";
+                if (msg === "Wrong password")
+                  this.$message({
+                    message: '密码错误，请重新输入！',
+                    type: 'error'
+                  });
+                else
+                  this.$message({
+                    message: '用户名错误，请重新输入！',
+                    type: 'error'
+                  })
+              }
+              this.loading = false;
+            })
+            .catch((error) => {
+              console.log(error);
+              this.$message({
+                message: '与服务器连接失败！',
+                type: 'error'
+              });
+
+              this.loading = false;
+            });
+        else { // 非管理员登陆
+          location.replace(arr[vm.memberStatus].url);
+        }
+      },
+      imgSource(n) {
+        let url = '/src/img/';
+        if (!n) url = url + 'userCover.jpg';
+        else url = url + 'deliveryCover.jpg';
+        return url;
+      }
+    },
+    computed: {
+      dayCount() {
+        return '今天是 ' + dayText[new Date().getDay()];
+      }
+    }
+  });
+</script>
+
+<style>
+  * {
+    font-size: 20px !important;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  .el-container {
+    align-items: center;
+    height: 100vh;
+  }
+
+  .image {
+    width: 100%;
+  }
+
+  .el-input {
+    width: 80%;
+  }
+
+  .el-dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 400px;
+  }
+
+  .dialog-footer {
+    display: flex;
+    justify-content: center;
+  }
+
+  .tip {
+    font-size: 15px !important;
+    color: gray;
+  }
+</style>
+
+</html>

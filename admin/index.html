@@ -6,10 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>外卖柜子管理中心</title>
-  <script src="/src/js/vue.js"></script>
-  <script src="/src/js/element-ui.js"></script>
-  <script src="/src/js/axios.js"></script>
-  <link rel="stylesheet" href="/src/css/element-ui.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.25.0/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
+
 </head>
 
 <body>
@@ -22,26 +23,27 @@
           <el-button type="danger" plain @click="sign_out">登出</el-button>
         </div>
       </el-header>
-      <el-container>
+      <el-container v-loading="loading">
         <el-aside width="200px">
           <el-menu default-active="1">
-            <el-menu-item index="1" @click="tab=1">
+            <el-menu-item index="1" @click="switchPage(1)">
               <template slot="title">外卖柜总览</template>
             </el-menu-item>
-            <el-menu-item index="2" @click="tab=2">
+            <el-menu-item index="2" @click="switchPage(2)">
               <template slot="title">查询筛选</template>
             </el-menu-item>
-            <el-menu-item index="3" @click="tab=3">
+            <el-menu-item index="3" @click="switchPage(3)">
               <template slot="title">密码修改</template>
             </el-menu-item>
           </el-menu>
         </el-aside>
         <el-container>
           <el-main>
-            <el-page-header v-if="tab===1" @back="switch_page" :content="step ? '柜子具体信息': '选择一个空柜查看'"></el-page-header>
+            <el-page-header v-show="tab===1" @back="switchPage(1)" :content="step ? '柜子具体信息': '选择一个空柜查看'">
+            </el-page-header>
             <!-- cabinet -->
             <div id="cabinet" v-if="step===0&&tab===1">
-              <div v-for="box in 30" class="takeout-box box" @click="select" v-if="box && loaded"
+              <div v-for="box in 30" class="takeout-box box" @click="select" v-if="box"
                 :style="{backgroundColor: boxColor(box)}">{{box}}</div>
             </div>
             <!-- takeout_info -->
@@ -67,9 +69,10 @@
                   </el-descriptions-item>
                 </el-descriptions>
                 <el-divider content-position="left">所有操作</el-divider>
-                <el-button @click="openFront" round>打开前柜门</el-button>
-                <el-button @click="openBack" round>打开后柜门</el-button>
-                <el-button @click="sendMessage" round :disabled="boxLinks[curNum] === undefined">给该用户发送短信</el-button>
+                <el-button style="font-size: small !important;" @click="open(0)" round>开内侧柜门</el-button>
+                <el-button style="font-size: small !important;" @click="open(1)" round>开外侧柜门</el-button>
+                <el-button style="font-size: small !important;" @click="sendMessage" round
+                  :disabled="boxLinks[curNum] === undefined">给该用户发送短信</el-button>
               </el-card>
             </div>
             <div id="inquiry" v-if="tab===2">
@@ -125,6 +128,7 @@
             <span v-if="!step&&tab===1" style="color: #909399">#空柜子</span>
             <span v-if="!step&&tab===1" style="color: #409eff">#已占用</span>
             <span v-if="!step&&tab===1" style="color: #f56c6c">#超时外卖</span>
+            <span v-if="tab===1&&step===1" style="color: #909399">#清理外卖请打开内侧柜门</span>
           </el-footer>
         </el-container>
       </el-container>
@@ -133,22 +137,22 @@
 </body>
 
 <script>
-  const url = "http://localhost";
+  const url = "http://8.130.13.33";
   const port = "8080";
-  const statusTitle = ["空闲", "已使用", "已超时"];
+  const statusTitle = ["空闲", "已存放", "已超时"];
   const boxStatus = ["info", "", "danger"];
   const colorPad = ["#e9e9eb", "#c6e2ff", "#fde2e2"]; // empty, used, timeout
   //创建Vue实例,得到 ViewModel
   const vm = new Vue({
     el: "#app",
     data: {
-      loaded: false,
+      loading: false,
       user: { name: "Robot_1" },
       boxLinks: [],
       items: [
         {
           id: undefined,
-          phobeNum: undefined,
+          phoneNum: undefined,
           location: undefined,
           storageTime: undefined,
           status: undefined,
@@ -166,7 +170,7 @@
         label: '已存柜'
       }, {
         value: 3,
-        label: '已存且满12小时未取出'
+        label: '已超时柜'
       }],
       selectedStatus: 1,
       clientHeight: "",
@@ -187,10 +191,9 @@
       window.onresize = function temp() {
         this.clientHeight = document.documentElement.clientHeight;
         this.clientHeight = this.clientHeight - 120 + "px";
-        console.log(this.clientHeight);
         document.querySelector(".el-main").style.height = clientHeight;
       };
-      // 倒计时
+      // 实时更新外卖过期状态
       let x = setInterval(() => {
         for (let i = 1; i < this.items.length; i++) {
           if (this.items[i].status) break;
@@ -200,62 +203,142 @@
           }
         }
       }, 1000); // 刷新间隔
-      // 自动登出
-      const maxTime = 15; // seconds
-      var time = maxTime;
-      document.body.onkeydown = () => {
-        time = maxTime;
-      }
-      document.body.onmousedown = () => {
-        time = maxTime;
-      }
-      document.body.onmousemove = () => {
-        time = maxTime;
-      }
-      var y = setInterval(() => {
-        time--;
-        if (time <= 0) {
-          clearInterval(y);
-          alert('您已经长时间没有操作了，将自动退出到首页');
-          window.location.replace('/');
-        }
-      }, 1000)
+      document.querySelector(".el-page-header__left").style.display = 'none'; // 隐藏主页返回按键
     },
     methods: {
       async getTakeoutData() {
-        let res = await axios({
+        this.loading = true;
+        await axios({
           method: "get",
           url: url + ":" + port + "/takeout_bin/fetchdata",
-        });
-        this.loaded = true; // 加载完毕
-        let data = res.data.data;
-        vm.items.length = 1;
-        for (let i = 0; i < data.length; i++) {
-          let item = new Object();
-          item.id = data[i].id;
-          item.phoneNum = data[i].phoneNum;
-          item.storageTime = data[i].date;
-          item.location = data[i].location;
-          item.status = new Date().getTime() - Number(item.storageTime) < 12 * 3600000 ? 0 : 1;
-          this.items.push(item);
-        }
-        this.boxLinks.length = 31;
-        for (let i = 1; i < this.items.length; i++) {
-          this.boxLinks[this.items[i].location] = i;
-        }
+        })
+          .then((response) => {
+            let data = response.data.data;
+            this.items.length = 1;
+            for (let i = 0; i < data.length; i++) {
+              let item = new Object();
+              item.id = data[i].id;
+              item.phoneNum = data[i].phoneNum;
+              item.storageTime = data[i].date;
+              item.location = data[i].location;
+              item.status = new Date().getTime() - Number(item.storageTime) < 12 * 3600000 ? 0 : 1;
+              this.items.push(item);
+            }
+            this.boxLinks.length = 31;
+            for (let i = 1; i <= 30; i++) this.boxLinks[i] = undefined;
+            for (let i = 1; i < this.items.length; i++) {
+              this.boxLinks[this.items[i].location] = i;
+            }
+            this.loading = false; // 加载完毕
+            this.countDown();
+          })
+          .catch((error) => {
+            console.log(error);
+            this.$message({
+              message: '与服务器连接失败！',
+              type: 'error'
+            });
+            this.$notify({
+              title: '未知错误',
+              message: '与服务器连接失败，请登出后重试',
+              type: 'error',
+              duration: 0
+            });
+          })
+
       },
-      switch_page(f) {
-        if (this.step) this.step--; //返回选择页面
+      countDown() {
+        const maxTime = 5000; // seconds
+        var time = maxTime;
+        document.body.onkeydown = () => {
+          time = maxTime;
+        }
+        document.body.onmousedown = () => {
+          time = maxTime;
+        }
+        document.body.onmousemove = () => {
+          time = maxTime;
+        }
+        var y = setInterval(() => {
+          time--;
+          if (time === 5) vm.$notify({
+            title: '警告',
+            message: '您已经长时间没有操作了，即将自动登出到首页',
+            type: 'error'
+          })
+          if (time <= 0) {
+            clearInterval(y);
+            window.location.replace('/');
+          }
+        }, 1000)
+      },
+      switchPage(n) {
+        this.tab = n;
+        if (this.step) this.step = 0; //返回选择页面
+        if (n === 1) document.querySelector(".el-page-header__left").style.display = 'none';
       },
       select(e) {
         let element = e.target;
         this.curNum = element.innerHTML;
-        //element.classList.add('selected'); // 测试多选，以后在管理员页面使用
-        this.step++; // 进入下一步，输入存餐码
+        this.step = 1;
+        document.querySelector(".el-page-header__left").style.display = 'flex';
       },
       open(n) {
         let msg = n ? "外侧柜门已经打开" : "内侧柜门已经打开";
-        alert(msg);
+        this.$message({
+          message: msg,
+          type: 'success'
+        });
+        if (!n && this.boxLinks[this.curNum] !== undefined) this.$confirm(`是否清理第 ${this.curNum} 号柜中的外卖？`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.takeOut();
+        }).catch(() => {
+          this.$message({
+            message: '未选择清理外卖'
+          })
+        })
+
+      },
+      async takeOut() {
+        this.loading = true;
+        await axios({
+          method: "post",
+          url: url + ":" + port + "/takeout_bin/takeout",
+          data: {
+            phoneNum: this.items[this.boxLinks[this.curNum]].phoneNum
+          }
+        })
+          .then((response) => {
+            let msg = response.data.message;
+            this.$message({
+              message: `第 ${this.curNum} 号柜中的外卖已被清理！`,
+              type: 'success'
+            })
+            let content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被清理"
+            this.$notify({
+              title: "已向用户发送短信",
+              dangerouslyUseHTMLString: true,
+              message: "<strong>内容为：</strong><br />" + content,
+              type: 'success',
+            })
+            this.items.splice(this.boxLinks[this.curNum], 1);
+            this.boxLinks[this.curNum] = undefined;
+            for (let i = this.curNum; i <= 30; i++) {
+              if (this.boxLinks[i] === undefined) continue;
+              this.boxLinks[i]--;
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+            this.$message({
+              message: '与服务器连接失败',
+              type: 'error'
+            })
+          })
+        this.loading = false;
       },
       input_number(e) {
         let text = e.target.innerHTML;
@@ -274,8 +357,9 @@
           this.form.newPwd = this.form.newPwd.substring(0, this.form.newPwd.length - 1);
         }
       },
-      submitPwd() {
-        let res = axios({
+      async submitPwd() {
+        this.loading = true;
+        await axios({
           method: "post",
           url: url + ':' + port + '/takeout_bin/changepwd',
           data: {
@@ -286,32 +370,58 @@
           .then((response) => {
             let msg = response.data.message;
             if (msg === 'success') {
-              alert("修改成功，请重新登陆");
-              window.location.replace('/');
+              this.$alert('密码修改成功，请重新登陆', '提示', {
+                confirmButtonText: '确定',
+                callback: action => {
+                  window.location.replace('/');
+                }
+              })
             }
             else {
-              alert("原密码错误，请重新输入");
+              this.$message({
+                message: "原密码错误，请重新输入",
+                type: 'error'
+              })
               this.form.newPwd = '';
               this.form.oldPwd = '';
             }
           })
-      },
-      openFront() {
-        alert("第" + this.curNum + "号柜前柜门已经打开");
-      },
-      openBack() {
-        alert("第" + this.curNum + "号柜后柜门已经打开");
+          .catch((error) => {
+            console.log(error);
+            this.$message({
+              message: '与服务器连接失败',
+              type: 'error'
+            })
+          })
+        this.loading = false;
       },
       sendMessage() {
-        alert("短信以发送至用户手机");
+        let content = '';
+        if (!this.items[this.boxLinks[this.curNum]].status)
+          content = "您的订单已存入牛牛马马外卖柜的 " + this.curNum + " 号格口，请及时取餐。入柜12小时后将被清理。";
+        else content = "您于 " + this.formatDate(new Date(Number(this.items[this.boxLinks[this.curNum]].storageTime))) + " 的外卖订单已经被清理"
+        this.$notify({
+          title: "已向用户发送短信",
+          dangerouslyUseHTMLString: true,
+          message: "<strong>内容为：</strong><br />" + content,
+          type: 'success',
+        })
       },
       sign_out() {
         window.location.replace("/");
         // 删除登录信息 TODO
       },
+      formatDate(time) {
+        let y = time.getFullYear(),
+          m = time.getMonth() + 1,
+          d = time.getDate();
+        return (y + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) + " " +
+          time.toTimeString().substr(0, 8)
+        );
+      },
     },
     computed: {
-      boxColor() {
+      boxColor(n) {
         return function (n) {
           if (this.boxLinks[n] === undefined) return colorPad[0];
           else if (this.items[this.boxLinks[n]].status)
@@ -323,13 +433,9 @@
         let time = new Date(
           Number(this.items[this.boxLinks[this.curNum]].storageTime)
         );
-        let y = time.getFullYear(),
-          m = time.getMonth() + 1,
-          d = time.getDate();
-        return (y + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) + " " +
-          time.toTimeString().substr(0, 8)
-        );
+        return this.formatDate(time);
       },
+
       boxStatusType() {
         if (this.boxLinks[this.curNum] === undefined) return boxStatus[0];
         else if (this.items[this.boxLinks[this.curNum]].status)
@@ -361,14 +467,19 @@
               arr.push({ num: i });
           }
         }
+        this.$message({
+          message: `共查询到 ${arr.length} 个${this.options[this.selectedStatus - 1].label}`,
+          duration: 1000
+        })
         return arr;
       }
-    },
+    }
   });
 </script>
 <style>
   * {
     font-size: 20px !important;
+    user-select: none;
   }
 
   html {

@@ -6,10 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>用户操作面板</title>
-  <script src="/src/js/vue.js"></script>
-  <script src="/src/js/element-ui.js"></script>
-  <script src="/src/js/axios.js"></script>
-  <link rel="stylesheet" href="/src/css/element-ui.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.25.0/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
+
 </head>
 
 <body>
@@ -19,7 +20,6 @@
         <h2>用户操作面板</h2>
 
         <div style="width: 120px; display: flex; justify-content: space-between">
-          <!-- <el-avatar>{{user.name}}</el-avatar> -->
           <el-button type="danger" plain @click="sign_out">登出</el-button>
         </div>
       </el-header>
@@ -34,7 +34,7 @@
             </el-menu-item>
           </el-menu>
         </el-aside>
-        <el-container>
+        <el-container v-loading="loading">
           <el-main>
             <!-- input_takeout_code -->
             <div id="input-info" v-if="!loaded">
@@ -85,7 +85,7 @@
 </body>
 
 <script>
-  const url = "http://localhost";
+  const url = "http://8.130.13.33";
   const port = "8080";
   const vm = new Vue({
     el: "#app",
@@ -96,6 +96,7 @@
       loaded: false,
       form: { code: "" },
       tableData: [],
+      loading: false
     },
     mounted() {
       // 固定 footer 在页面底部
@@ -105,7 +106,6 @@
       window.onresize = function temp() {
         this.clientHeight = document.documentElement.clientHeight;
         this.clientHeight = this.clientHeight - 120 + "px";
-        console.log(this.clientHeight);
         document.querySelector(".el-main").style.height = clientHeight;
       };
       // 自动登出
@@ -122,9 +122,13 @@
       }
       var x = setInterval(() => {
         time--;
+        if (time === 5) vm.$notify({
+          title: '警告',
+          message: '您已经长时间没有操作了，即将自动登出到首页',
+          type: 'error'
+        });
         if (time <= 0) {
           clearInterval(x);
-          alert('您已经长时间没有操作了，将自动退出到首页');
           window.location.replace('/');
         }
       }, 1000)
@@ -144,35 +148,79 @@
         this.form.code = this.form.code.substring(0, this.form.code.length - 1);
       },
       async judge() {
-        if (this.tab === 1 && this.form.code.length === 11)
-          return this.getHistory();
-        if (this.step && this.form.code.length === 11) return this.takeOut();
-        if (this.form.code.length != 4) return;
-        let res = await axios({
-          method: "post",
-          url: url + ":" + port + "/takeout_bin/judge",
-          data: {
-            code: this.form.code,
-          },
-        })
-          .then((response) => {
-            let msg = response.data.message;
-            if (msg === "empty") {
-              alert("没有找到对应的外卖");
-            } else if (msg === "needwhole") {
-              alert("请输入完整手机号");
-              this.step = 1;
-            } else {
-              alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
-              this.step = 0;
+        if (this.tab === 0) {
+          if (this.step === 1) {
+            if (this.form.code.length !== 11) {
+              this.$message({
+                message: '请输入正确格式的手机号',
+                type: 'warning'
+              })
+              return;
             }
-          })
-          .catch((error) => {
-            alert(error);
-          });
+            this.takeOut();
+          }
+          else {
+            if (this.form.code.length !== 4) {
+              this.$message({
+                message: '请输入正确格式的取餐码',
+                type: 'warning'
+              })
+              return;
+            }
+            this.loading = true;
+            let res = await axios({
+              method: "post",
+              url: url + ":" + port + "/takeout_bin/judge",
+              data: {
+                code: this.form.code,
+              },
+            })
+              .then((response) => {
+                let msg = response.data.message;
+                if (msg === "empty") {
+                  this.$message({
+                    message: "没有找到对应的外卖",
+                    type: 'error'
+                  })
+                } else if (msg === "needwhole") {
+                  this.$message({
+                    message: "请输入完整手机号",
+                    type: 'warning'
+                  })
+                  this.step = 1;
+                } else {
+                  this.$message({
+                    message: "第" + msg + "号柜门已经打开，请及时领取并关闭柜门",
+                    type: 'success'
+                  })
+                  this.step = 0;
+                }
+              })
+              .catch((error) => {
+                console.log(error);
+                this.$notify({
+                  title: "错误",
+                  message: "未能连接到服务器",
+                  type: 'error',
+                  duration: 0
+                })
+              });
+            this.loading = false;
+          }
+        }
+        else if (this.tab == 1) {
+          if (this.form.code.length !== 11) {
+            this.$message({
+              message: '请输入正确格式的手机号',
+              type: 'warning'
+            })
+          }
+          else this.getHistory();
+        }
         this.form.code = "";
       },
       async takeOut() {
+        this.loading = true;
         let res = await axios({
           method: "post",
           url: url + ":" + port + "/takeout_bin/takeout",
@@ -183,15 +231,28 @@
           .then((response) => {
             let msg = response.data.message;
             if (msg === "error") {
-              alert("无对应手机号");
+              this.$message({
+                message: '无对应手机号',
+                type: 'error'
+              })
             } else {
-              alert("第" + msg + "号柜门已经打开，请及时领取并关闭柜门");
+              this.$message({
+                message: "第" + msg + "号柜门已经打开，请及时领取并关闭柜门",
+                type: 'success'
+              })
             }
           })
           .catch((error) => {
-            alert(error);
+            console.log(error);
+            this.$notify({
+              title: "错误",
+              message: "未能连接到服务器",
+              type: 'error',
+              duration: 0
+            })
           });
         this.form.code = "";
+        this.loading = false;
         this.step = 0;
       },
       sign_out() {
@@ -207,28 +268,45 @@
       async getHistory() {
         this.tableData = [];
         this.tab = 1;
+        this.loading = true;
         let res = await axios({
           method: "post",
           url: url + ":" + port + "/takeout_bin/getHistory",
           data: {
             phoneNum: this.form.code,
           },
-        }).then((response) => {
-          if ((response.data.message = "success")) {
-            this.loaded = true;
-            for (let i = 0; i < response.data.data.length; i++) {
-              let item = new Object();
-              item.imdate = this.formatTime(
-                new Date(Number(response.data.data[i].imdate))
-              );
-              item.exdate = this.formatTime(
-                new Date(Number(response.data.data[i].exdate))
-              );
-              item.location = response.data.data[i].location;
-              this.tableData.push(item);
+        })
+          .then((response) => {
+            if ((response.data.message = "success")) {
+              this.loaded = true;
+              for (let i = 0; i < response.data.data.length; i++) {
+                let item = new Object();
+                item.imdate = this.formatTime(
+                  new Date(Number(response.data.data[i].imdate))
+                );
+                item.exdate = this.formatTime(
+                  new Date(Number(response.data.data[i].exdate))
+                );
+                item.location = response.data.data[i].location;
+                this.tableData.push(item);
+              }
+              this.loading = false;
+              this.$message({
+                message: `共查询到 ${response.data.data.length} 条历史记录`,
+                type: 'success'
+              })
             }
-          }
-        });
+          })
+          .catch((error) => {
+            console.log(error);
+            this.$notify({
+              title: "错误",
+              message: "未能连接到服务器",
+              type: 'error',
+              duration: 0
+            })
+          })
+        this.loading = false;
       },
     },
     computed: {
