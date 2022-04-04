@@ -18,7 +18,7 @@ back-end: Java
 * json-lib-2.4-jdk15.jar
 * mysql-connector-java-8.0.28.jar
 
-# MySQL Database Disign Convention
+# MySQL Database Design Convention
 
 database name: takeout_bin
 
